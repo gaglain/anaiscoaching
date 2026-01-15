@@ -1,0 +1,32 @@
+{
+  "name": "Anaïs Dubois - Coach Sportif Rennes",
+  "short_name": "Coach Anaïs",
+  "description": "Coaching sportif personnalisé à Rennes avec Anaïs Dubois",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f05a28",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["fitness", "health", "sports"],
+  "lang": "fr",
+  "dir": "ltr"
+}

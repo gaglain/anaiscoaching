@@ -1,26 +1,111 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
-
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
+    
+    <!-- SEO Primary -->
+    <title>Coach sportif à Rennes – Coaching personnalisé avec Anaïs Dubois</title>
+    <meta name="description" content="Anaïs Dubois, coach sportif diplômée à Rennes, propose un coaching personnalisé pour perte de poids, remise en forme et renforcement musculaire. Réservez vos séances en ligne." />
+    <meta name="author" content="Anaïs Dubois Coach Sportif" />
+    <meta name="keywords" content="coach sportif Rennes, coaching sportif Rennes, coach personnel Rennes, coach sportif à domicile Rennes, perte de poids Rennes, remise en forme Rennes, renforcement musculaire Rennes" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Coach sportif à Rennes – Coaching personnalisé avec Anaïs Dubois" />
+    <meta property="og:description" content="Coaching sportif personnalisé à Rennes avec Anaïs Dubois, coach diplômée. Perte de poids, remise en forme, renforcement. Réservez en ligne." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="Anaïs Dubois Coach Sportif Rennes" />
+    <meta property="og:image" content="/og-image.jpg" />
+    
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:title" content="Coach sportif à Rennes – Anaïs Dubois" />
+    <meta name="twitter:description" content="Coaching sportif personnalisé à Rennes. Perte de poids, remise en forme, renforcement avec une coach diplômée." />
+    <meta name="twitter:image" content="/og-image.jpg" />
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="https://anais-dubois-coach.fr" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#f05a28" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Coach Anaïs" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- Geo -->
+    <meta name="geo.region" content="FR-35" />
+    <meta name="geo.placename" content="Rennes" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Anaïs Dubois - Coach Sportif Rennes",
+      "description": "Coaching sportif personnalisé à Rennes : perte de poids, remise en forme, renforcement musculaire, préparation physique. Coach diplômée.",
+      "url": "https://anais-dubois-coach.fr",
+      "telephone": "",
+      "email": "anais.coaching@outlook.fr",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Rennes",
+        "addressRegion": "Bretagne",
+        "addressCountry": "FR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 48.1173,
+        "longitude": -1.6778
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "Rennes"
+      },
+      "priceRange": "€€",
+      "openingHours": "Mo-Sa 07:00-20:00",
+      "sameAs": [],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Services de coaching sportif",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Coaching individuel",
+              "description": "Séances personnalisées en face à face"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Coaching en duo",
+              "description": "Séances à deux pour plus de motivation"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Coaching petit groupe",
+              "description": "Séances en petit groupe jusqu'à 4 personnes"
+            }
+          }
+        ]
+      }
+    }
+    </script>
   </body>
 </html>
