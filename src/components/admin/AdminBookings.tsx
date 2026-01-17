@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { sendEmail, getSessionTypeLabel } from "@/lib/emails";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings"> & {
@@ -42,6 +43,10 @@ export function AdminBookings() {
 
   const updateBookingStatus = async (bookingId: string, status: "confirmed" | "cancelled") => {
     try {
+      // Get the booking details first
+      const booking = bookings.find(b => b.id === bookingId);
+      if (!booking) throw new Error("Booking not found");
+
       const { error } = await supabase
         .from("bookings")
         .update({ status })
@@ -49,9 +54,31 @@ export function AdminBookings() {
 
       if (error) throw error;
 
+      // Get client email
+      const { data: authUser } = await supabase.auth.admin.getUserById(booking.client_id);
+      const clientEmail = authUser?.user?.email;
+
+      if (clientEmail) {
+        const sessionDate = new Date(booking.session_date);
+        const formattedDate = format(sessionDate, "EEEE d MMMM yyyy", { locale: fr });
+        const formattedTime = format(sessionDate, "HH:mm", { locale: fr });
+
+        // Send email to client based on status
+        sendEmail({
+          type: status === "confirmed" ? "booking_confirmed" : "booking_cancelled",
+          to: clientEmail,
+          data: {
+            clientName: booking.profiles?.name || "Client",
+            sessionDate: formattedDate,
+            sessionTime: formattedTime,
+            sessionType: getSessionTypeLabel(booking.session_type),
+          },
+        });
+      }
+
       toast({
         title: status === "confirmed" ? "Réservation confirmée" : "Réservation annulée",
-        description: "Le statut a été mis à jour.",
+        description: "Le statut a été mis à jour et le client notifié par email.",
       });
 
       fetchBookings();

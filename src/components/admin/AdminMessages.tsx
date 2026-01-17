@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { sendEmail } from "@/lib/emails";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Message = Tables<"messages">;
@@ -187,6 +188,21 @@ export function AdminMessages() {
         .single();
 
       if (error) throw error;
+
+      // Get client email to send notification
+      const { data: authUser } = await supabase.auth.admin.getUserById(selectedClient.id);
+      const clientEmail = authUser?.user?.email;
+
+      if (clientEmail) {
+        sendEmail({
+          type: "new_message",
+          to: clientEmail,
+          data: {
+            clientName: selectedClient.name,
+            messagePreview: newMessage.trim().substring(0, 100),
+          },
+        });
+      }
 
       setMessages((prev) => [...prev, data]);
       setNewMessage("");

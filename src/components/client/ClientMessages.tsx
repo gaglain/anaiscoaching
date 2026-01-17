@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { notifyAdmin } from "@/lib/emails";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Message = Tables<"messages">;
@@ -134,6 +135,22 @@ export function ClientMessages() {
         .single();
 
       if (error) throw error;
+
+      // Get client name for notification
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+
+      // Notify admin about new message
+      notifyAdmin({
+        type: "new_message",
+        data: {
+          clientName: profile?.name || "Client",
+          messagePreview: newMessage.trim().substring(0, 100),
+        },
+      });
 
       setMessages((prev) => [...prev, data]);
       setNewMessage("");

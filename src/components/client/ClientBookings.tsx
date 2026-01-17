@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { sendEmail, notifyAdmin, getSessionTypeLabel } from "@/lib/emails";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings">;
@@ -78,6 +79,42 @@ export function ClientBookings() {
         });
 
       if (error) throw error;
+
+      // Send confirmation email to client
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+
+      const clientName = profile?.name || "Client";
+      const formattedDate = format(sessionDateTime, "EEEE d MMMM yyyy", { locale: fr });
+      const formattedTime = format(sessionDateTime, "HH:mm", { locale: fr });
+
+      // Send email to client
+      sendEmail({
+        type: "booking_confirmation",
+        to: user.email || "",
+        data: {
+          clientName,
+          sessionDate: formattedDate,
+          sessionTime: formattedTime,
+          sessionType: getSessionTypeLabel(sessionType),
+        },
+      });
+
+      // Notify admin
+      notifyAdmin({
+        type: "new_booking",
+        data: {
+          clientName,
+          clientEmail: user.email || "",
+          sessionDate: formattedDate,
+          sessionTime: formattedTime,
+          sessionType: getSessionTypeLabel(sessionType),
+          goals: goals || undefined,
+        },
+      });
 
       toast({
         title: "Demande envoyée !",
