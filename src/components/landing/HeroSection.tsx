@@ -1,5 +1,6 @@
 import { ArrowRight, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import anaisHero from "@/assets/anais-hero.jpg";
 
 export function HeroSection() {
   return (
@@ -24,7 +25,7 @@ export function HeroSection() {
             <h1 className="font-heading font-bold text-4xl md:text-5xl lg:text-6xl text-secondary leading-tight">
               Coach sportif à Rennes{" "}
               <span className="text-gradient">
-                – Coaching personnalisé avec Anaïs Dubois
+                – Coaching personnalisé avec Anaïs
               </span>
             </h1>
 
@@ -51,7 +52,7 @@ export function HeroSection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-lg font-semibold px-8 py-6 border-2"
+                  className="text-lg font-semibold px-8 py-6 border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                 >
                   Découvrir Anaïs
                 </Button>
@@ -64,7 +65,7 @@ export function HeroSection() {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className="h-5 w-5 fill-primary text-primary"
+                    className="h-5 w-5 fill-accent text-accent"
                   />
                 ))}
               </div>
@@ -76,18 +77,16 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Hero Image Placeholder */}
+          {/* Hero Image */}
           <div className="relative animate-fade-in-right" style={{ animationDelay: "0.2s" }}>
-            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-              {/* Placeholder for Anaïs photo */}
-              <div className="text-center p-8">
-                <div className="w-32 h-32 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
-                  <span className="text-4xl">📸</span>
-                </div>
-                <p className="text-muted-foreground font-medium">
-                  Photo d'Anaïs à uploader
-                </p>
-              </div>
+            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden shadow-xl">
+              <img 
+                src={anaisHero} 
+                alt="Anaïs Dubois - Coach sportif à Rennes"
+                className="w-full h-full object-cover object-center"
+              />
+              {/* Subtle overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-secondary/20 to-transparent" />
             </div>
 
             {/* Floating stats card */}
@@ -101,6 +100,11 @@ export function HeroSection() {
                   <p className="text-muted-foreground text-sm">d'expérience</p>
                 </div>
               </div>
+            </div>
+
+            {/* Decorative badge */}
+            <div className="absolute -top-4 -right-4 bg-accent text-accent-foreground px-4 py-2 rounded-full font-semibold shadow-lg">
+              Diplômée BPJEPS
             </div>
           </div>
         </div>

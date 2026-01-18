@@ -1,5 +1,7 @@
 import { GraduationCap, Award, Heart, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import anaisPortrait from "@/assets/anais-portrait.jpg";
+import anaisCoaching from "@/assets/anais-coaching.jpg";
 
 const credentials = [
   {
@@ -40,20 +42,25 @@ export function CoachSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Image column */}
           <div className="relative animate-fade-in-left">
-            <div className="aspect-square rounded-2xl overflow-hidden bg-primary/20 flex items-center justify-center">
-              {/* Placeholder for Anaïs photo */}
-              <div className="text-center p-8">
-                <div className="w-32 h-32 mx-auto rounded-full bg-primary/30 flex items-center justify-center mb-4">
-                  <span className="text-4xl">📸</span>
-                </div>
-                <p className="text-primary-foreground/70 font-medium">
-                  Photo d'Anaïs à uploader
-                </p>
-              </div>
+            <div className="aspect-square rounded-2xl overflow-hidden shadow-xl">
+              <img 
+                src={anaisPortrait} 
+                alt="Anaïs Dubois - Coach sportif diplômée à Rennes"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Secondary image floating */}
+            <div className="absolute -bottom-8 -right-8 w-48 h-32 rounded-xl overflow-hidden shadow-lg border-4 border-secondary hidden md:block">
+              <img 
+                src={anaisCoaching} 
+                alt="Séance de coaching sportif avec Anaïs"
+                className="w-full h-full object-cover"
+              />
             </div>
 
             {/* Decorative element */}
-            <div className="absolute -bottom-6 -right-6 w-48 h-48 gradient-primary rounded-2xl -z-10 opacity-50" />
+            <div className="absolute -bottom-6 -left-6 w-48 h-48 gradient-primary rounded-2xl -z-10 opacity-50" />
           </div>
 
           {/* Content column */}
