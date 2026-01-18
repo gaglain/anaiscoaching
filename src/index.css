@@ -3,40 +3,45 @@
 @tailwind utilities;
 
 /* Design System - Anaïs Dubois Coach Sportif
-   Style: Dynamique & Sportif
-   Colors: Energetic coral/orange with deep navy for contrast
+   Style: Moderne, Sportif & Accessible
+   Colors: Teal/Turquoise with Orange accent
+   Font: Futura PT
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.cdnfonts.com/css/futura-pt');
 
 @layer base {
   :root {
-    /* Primary: Vibrant coral/orange - energetic, sporty */
-    --primary: 16 90% 55%;
+    /* Primary: Vibrant teal #41C5B7 → HSL 172 52% 52% */
+    --primary: 172 52% 52%;
     --primary-foreground: 0 0% 100%;
     
-    /* Background: Clean white */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Primary variations */
+    --primary-dark: 166 56% 35%; /* #237F72 */
+    --primary-light: 172 64% 55%; /* #40D9C9 */
     
-    /* Card: Slightly warm white */
-    --card: 30 20% 98%;
-    --card-foreground: 222 47% 11%;
+    /* Background: Cream off-white #F6F9EB → HSL 72 50% 95% */
+    --background: 72 50% 95%;
+    --foreground: 166 56% 20%;
+    
+    /* Card: White with slight warmth */
+    --card: 0 0% 100%;
+    --card-foreground: 166 56% 20%;
     
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 166 56% 20%;
     
-    /* Secondary: Deep navy blue - professional, trustworthy */
-    --secondary: 222 47% 15%;
+    /* Secondary: Dark teal #237F72 → HSL 166 56% 32% */
+    --secondary: 166 56% 32%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Muted: Light warm gray */
-    --muted: 30 10% 95%;
-    --muted-foreground: 222 20% 40%;
+    /* Muted: Light cream */
+    --muted: 72 30% 92%;
+    --muted-foreground: 166 30% 40%;
     
-    /* Accent: Energetic gradient stop */
-    --accent: 25 95% 60%;
+    /* Accent: Orange #E69200 → HSL 38 100% 45% */
+    --accent: 38 100% 45%;
     --accent-foreground: 0 0% 100%;
     
     /* Destructive */
@@ -48,72 +53,73 @@
     --success-foreground: 0 0% 100%;
     
     /* Borders and inputs */
-    --border: 30 15% 88%;
-    --input: 30 15% 88%;
-    --ring: 16 90% 55%;
+    --border: 172 30% 85%;
+    --input: 172 30% 85%;
+    --ring: 172 52% 52%;
     
     --radius: 0.75rem;
     
     /* Sidebar */
-    --sidebar-background: 222 47% 11%;
+    --sidebar-background: 166 56% 20%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 16 90% 55%;
+    --sidebar-primary: 172 52% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 47% 20%;
+    --sidebar-accent: 166 56% 28%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 222 40% 20%;
-    --sidebar-ring: 16 90% 55%;
+    --sidebar-border: 166 40% 25%;
+    --sidebar-ring: 172 52% 52%;
     
     /* Custom: Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(16 90% 55%) 0%, hsl(25 95% 60%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsl(30 20% 98%) 0%, hsl(0 0% 100%) 100%);
-    --gradient-dark: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(222 47% 20%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(172 52% 52%) 0%, hsl(172 64% 55%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(72 50% 95%) 0%, hsl(0 0% 100%) 100%);
+    --gradient-dark: linear-gradient(135deg, hsl(166 56% 20%) 0%, hsl(166 56% 32%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(38 100% 45%) 0%, hsl(38 100% 55%) 100%);
     
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1), 0 2px 4px -2px hsl(222 47% 11% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(222 47% 11% / 0.1), 0 8px 10px -6px hsl(222 47% 11% / 0.1);
-    --shadow-primary: 0 10px 30px -10px hsl(16 90% 55% / 0.4);
+    --shadow-sm: 0 1px 2px 0 hsl(166 56% 20% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(166 56% 20% / 0.1), 0 2px 4px -2px hsl(166 56% 20% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(166 56% 20% / 0.1), 0 4px 6px -4px hsl(166 56% 20% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(166 56% 20% / 0.1), 0 8px 10px -6px hsl(166 56% 20% / 0.1);
+    --shadow-primary: 0 10px 30px -10px hsl(172 52% 52% / 0.4);
   }
 
   .dark {
-    --background: 222 47% 6%;
+    --background: 166 56% 8%;
     --foreground: 0 0% 95%;
     
-    --card: 222 47% 10%;
+    --card: 166 56% 12%;
     --card-foreground: 0 0% 95%;
     
-    --popover: 222 47% 8%;
+    --popover: 166 56% 10%;
     --popover-foreground: 0 0% 95%;
     
-    --primary: 16 90% 55%;
+    --primary: 172 52% 52%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 222 40% 25%;
+    --secondary: 166 40% 25%;
     --secondary-foreground: 0 0% 95%;
     
-    --muted: 222 40% 15%;
-    --muted-foreground: 222 20% 60%;
+    --muted: 166 40% 15%;
+    --muted-foreground: 166 20% 60%;
     
-    --accent: 25 95% 60%;
+    --accent: 38 100% 45%;
     --accent-foreground: 0 0% 100%;
     
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 222 40% 20%;
-    --input: 222 40% 20%;
-    --ring: 16 90% 55%;
+    --border: 166 40% 20%;
+    --input: 166 40% 20%;
+    --ring: 172 52% 52%;
     
-    --sidebar-background: 222 47% 6%;
+    --sidebar-background: 166 56% 6%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 16 90% 55%;
+    --sidebar-primary: 172 52% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 40% 15%;
+    --sidebar-accent: 166 40% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 222 40% 15%;
-    --sidebar-ring: 16 90% 55%;
+    --sidebar-border: 166 40% 15%;
+    --sidebar-ring: 172 52% 52%;
   }
 }
 
@@ -128,11 +134,11 @@
   
   body {
     @apply bg-background text-foreground;
-    font-family: 'Open Sans', sans-serif;
+    font-family: 'Futura PT', 'Montserrat', sans-serif;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Futura PT', 'Montserrat', sans-serif;
   }
 }
 
@@ -149,12 +155,23 @@
     background: var(--gradient-dark);
   }
   
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
   .shadow-primary {
     box-shadow: var(--shadow-primary);
   }
   
   .text-gradient {
     background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .text-gradient-accent {
+    background: var(--gradient-accent);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
