@@ -54,7 +54,7 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
               <li>Suivre votre progression</li>
             </ul>
             <p style="margin-top: 24px;">
-              <a href="https://anais-dubois-coach.fr/espace-client" style="${buttonStyle}">
+              <a href="https://coachsportif-rennes.fr/espace-client" style="${buttonStyle}">
                 Accéder à mon espace
               </a>
             </p>
@@ -104,7 +104,7 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
             </div>
             <p>N'oubliez pas d'apporter une tenue adaptée et une bouteille d'eau !</p>
             <p style="margin-top: 24px;">
-              <a href="https://anais-dubois-coach.fr/espace-client" style="${buttonStyle}">
+              <a href="https://coachsportif-rennes.fr/espace-client" style="${buttonStyle}">
                 Voir mes réservations
               </a>
             </p>
@@ -126,7 +126,7 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
             <p>Votre séance du ${data.sessionDate} à ${data.sessionTime} a été annulée.</p>
             <p>N'hésitez pas à réserver un nouveau créneau qui vous convient mieux.</p>
             <p style="margin-top: 24px;">
-              <a href="https://anais-dubois-coach.fr/espace-client" style="${buttonStyle}">
+              <a href="https://coachsportif-rennes.fr/espace-client" style="${buttonStyle}">
                 Réserver une nouvelle séance
               </a>
             </p>
@@ -150,7 +150,7 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
               <p style="font-style: italic;">"${data.messagePreview}"</p>
             </div>
             <p style="margin-top: 24px;">
-              <a href="https://anais-dubois-coach.fr/espace-client" style="${buttonStyle}">
+              <a href="https://coachsportif-rennes.fr/espace-client" style="${buttonStyle}">
                 Lire le message
               </a>
             </p>
@@ -173,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { subject, html } = getEmailContent(type, data);
 
     const emailResponse = await resend.emails.send({
-      from: "Coach Anaïs <onboarding@resend.dev>",
+      from: "Anaïs Dubois Coach <contact@coachsportif-rennes.fr>",
       to: [to],
       subject,
       html,
