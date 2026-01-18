@@ -12,7 +12,7 @@ import { sendEmail, getSessionTypeLabel } from "@/lib/emails";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings"> & {
-  profiles?: { name: string; phone: string | null } | null;
+  profiles?: { name: string; phone: string | null; email: string | null } | null;
 };
 
 export function AdminBookings() {
@@ -29,7 +29,7 @@ export function AdminBookings() {
     try {
       const { data, error } = await supabase
         .from("bookings")
-        .select("*, profiles(name, phone)")
+        .select("*, profiles(name, phone, email)")
         .order("session_date", { ascending: true });
 
       if (error) throw error;
@@ -54,9 +54,8 @@ export function AdminBookings() {
 
       if (error) throw error;
 
-      // Get client email
-      const { data: authUser } = await supabase.auth.admin.getUserById(booking.client_id);
-      const clientEmail = authUser?.user?.email;
+      // Get client email from profiles join
+      const clientEmail = booking.profiles?.email;
 
       if (clientEmail) {
         const sessionDate = new Date(booking.session_date);

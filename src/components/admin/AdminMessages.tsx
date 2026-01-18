@@ -189,14 +189,17 @@ export function AdminMessages() {
 
       if (error) throw error;
 
-      // Get client email to send notification
-      const { data: authUser } = await supabase.auth.admin.getUserById(selectedClient.id);
-      const clientEmail = authUser?.user?.email;
+      // Get client email from the profile (we need to fetch it with email)
+      const { data: clientProfile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", selectedClient.id)
+        .single();
 
-      if (clientEmail) {
+      if (clientProfile?.email) {
         sendEmail({
           type: "new_message",
-          to: clientEmail,
+          to: clientProfile.email,
           data: {
             clientName: selectedClient.name,
             messagePreview: newMessage.trim().substring(0, 100),
