@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const ADMIN_EMAIL = "anais.coaching@outlook.fr";
+const ADMIN_EMAIL = "contact@coachsportif-rennes.fr";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,7 +56,7 @@ const getNotificationContent = (type: NotifyRequest["type"], data: NotifyRequest
               <p><strong>📧 Email :</strong> ${data.clientEmail}</p>
             </div>
             <p style="margin-top: 24px;">
-              <a href="https://anais-dubois-coach.fr/admin" style="${buttonStyle}">
+              <a href="https://coachsportif-rennes.fr/admin" style="${buttonStyle}">
                 Voir dans le back-office
               </a>
             </p>
@@ -75,7 +75,7 @@ const getNotificationContent = (type: NotifyRequest["type"], data: NotifyRequest
               <p style="font-style: italic;">"${data.messagePreview}"</p>
             </div>
             <p style="margin-top: 24px;">
-              <a href="https://anais-dubois-coach.fr/admin" style="${buttonStyle}">
+              <a href="https://coachsportif-rennes.fr/admin" style="${buttonStyle}">
                 Répondre
               </a>
             </p>
@@ -98,7 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { subject, html } = getNotificationContent(type, data);
 
     const emailResponse = await resend.emails.send({
-      from: "Coach Anaïs App <onboarding@resend.dev>",
+      from: "App Coach Anaïs <noreply@coachsportif-rennes.fr>",
       to: [ADMIN_EMAIL],
       subject,
       html,
