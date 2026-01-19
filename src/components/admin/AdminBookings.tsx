@@ -100,9 +100,9 @@ export function AdminBookings() {
 
     const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//AD Coach//Booking//FR
+PRODID:-//Anaïs Dubois Coach//Booking//FR
 BEGIN:VEVENT
-UID:${booking.id}@adcoach.fr
+UID:${booking.id}@coachsportif-rennes.fr
 DTSTAMP:${formatICSDate(new Date())}
 DTSTART:${formatICSDate(startDate)}
 DTEND:${formatICSDate(endDate)}
@@ -131,11 +131,11 @@ END:VCALENDAR`;
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Confirmé</Badge>;
+        return <Badge className="bg-primary/10 text-primary border-primary/20">Confirmé</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">En attente</Badge>;
+        return <Badge className="bg-secondary/10 text-secondary border-secondary/20">En attente</Badge>;
       case "cancelled":
-        return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">Annulé</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Annulé</Badge>;
       default:
         return null;
     }
@@ -156,7 +156,7 @@ END:VCALENDAR`;
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
       </div>
     );
   }
@@ -166,11 +166,11 @@ END:VCALENDAR`;
       {/* Filter */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold">Gestion des réservations</h2>
+          <h2 className="text-xl font-heading font-semibold text-foreground">Gestion des réservations</h2>
           <p className="text-muted-foreground">Validez et gérez les demandes de séance</p>
         </div>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] border-border focus:border-secondary">
             <SelectValue placeholder="Filtrer par statut" />
           </SelectTrigger>
           <SelectContent>
@@ -183,32 +183,39 @@ END:VCALENDAR`;
       </div>
 
       {/* Upcoming Bookings */}
-      <Card>
+      <Card className="border-secondary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
+            <div className="p-2 rounded-lg bg-secondary/10">
+              <Calendar className="h-5 w-5 text-secondary" />
+            </div>
             Séances à venir ({upcomingBookings.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {upcomingBookings.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              Aucune séance à venir avec ce filtre
-            </p>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/10 mb-4">
+                <Calendar className="h-6 w-6 text-secondary" />
+              </div>
+              <p className="text-muted-foreground">
+                Aucune séance à venir avec ce filtre
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
               {upcomingBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className={`flex flex-col lg:flex-row lg:items-center justify-between p-4 rounded-lg border ${
+                  className={`flex flex-col lg:flex-row lg:items-center justify-between p-4 rounded-lg border transition-colors ${
                     booking.status === "pending"
-                      ? "border-yellow-500/30 bg-yellow-500/5"
-                      : "border-border"
+                      ? "border-secondary/30 bg-secondary/5 hover:bg-secondary/10"
+                      : "border-border/50 hover:border-primary/30"
                   }`}
                 >
                   <div className="space-y-1 mb-4 lg:mb-0">
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold">
+                      <p className="font-semibold text-foreground">
                         {booking.profiles?.name || "Client inconnu"}
                       </p>
                       {getStatusBadge(booking.status)}
@@ -237,6 +244,7 @@ END:VCALENDAR`;
                         <Button
                           size="sm"
                           onClick={() => updateBookingStatus(booking.id, "confirmed")}
+                          className="bg-primary hover:bg-primary/90"
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Confirmer
@@ -245,6 +253,7 @@ END:VCALENDAR`;
                           size="sm"
                           variant="outline"
                           onClick={() => updateBookingStatus(booking.id, "cancelled")}
+                          className="border-destructive/30 text-destructive hover:bg-destructive/5"
                         >
                           <X className="h-4 w-4 mr-1" />
                           Refuser
@@ -257,6 +266,7 @@ END:VCALENDAR`;
                           size="sm"
                           variant="outline"
                           onClick={() => generateICS(booking)}
+                          className="border-secondary/30 hover:bg-secondary/5"
                         >
                           <Download className="h-4 w-4 mr-1" />
                           .ics
@@ -265,6 +275,7 @@ END:VCALENDAR`;
                           size="sm"
                           variant="ghost"
                           onClick={() => updateBookingStatus(booking.id, "cancelled")}
+                          className="text-destructive hover:bg-destructive/5"
                         >
                           <X className="h-4 w-4 mr-1" />
                           Annuler
@@ -281,19 +292,19 @@ END:VCALENDAR`;
 
       {/* Past Bookings */}
       {pastBookings.length > 0 && (
-        <Card>
+        <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>Historique ({pastBookings.length})</CardTitle>
+            <CardTitle className="text-lg">Historique ({pastBookings.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {pastBookings.slice(0, 20).map((booking) => (
                 <div
                   key={booking.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border bg-muted/30"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border/30 bg-muted/30"
                 >
                   <div className="space-y-1">
-                    <p className="font-medium">
+                    <p className="font-medium text-foreground">
                       {booking.profiles?.name || "Client inconnu"}
                     </p>
                     <p className="text-sm text-muted-foreground">

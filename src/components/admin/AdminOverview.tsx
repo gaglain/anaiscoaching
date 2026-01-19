@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, MessageSquare, Users, Clock, AlertCircle } from "lucide-react";
+import { Calendar, MessageSquare, Users, Clock, AlertCircle, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -83,7 +83,7 @@ export function AdminOverview() {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i} className="animate-pulse border-border/50">
             <CardHeader>
               <div className="h-4 bg-muted rounded w-1/2"></div>
             </CardHeader>
@@ -98,66 +98,93 @@ export function AdminOverview() {
 
   return (
     <div className="space-y-6">
+      {/* Welcome Banner */}
+      <Card className="bg-gradient-to-br from-secondary/10 via-secondary/5 to-background border-secondary/20">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-full bg-secondary/20">
+              <Activity className="h-8 w-8 text-secondary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-heading font-bold text-foreground">
+                Tableau de bord administrateur
+              </h2>
+              <p className="text-muted-foreground">
+                Vue d'ensemble de votre activité coaching
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border-secondary/20 hover:border-secondary/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Demandes en attente
             </CardTitle>
-            <AlertCircle className="h-4 w-4 text-yellow-500" />
+            <div className="p-2 rounded-lg bg-secondary/10">
+              <AlertCircle className="h-4 w-4 text-secondary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{pendingBookings.length}</p>
+            <p className="text-3xl font-bold text-foreground">{pendingBookings.length}</p>
             <p className="text-sm text-muted-foreground">À traiter</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-primary/20 hover:border-primary/40 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Séances aujourd'hui
             </CardTitle>
-            <Clock className="h-4 w-4 text-primary" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Clock className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{todaySessions}</p>
+            <p className="text-3xl font-bold text-foreground">{todaySessions}</p>
             <p className="text-sm text-muted-foreground">Confirmées</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/50 hover:border-primary/30 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Messages non lus
             </CardTitle>
-            <MessageSquare className="h-4 w-4 text-primary" />
+            <div className="p-2 rounded-lg bg-accent/50">
+              <MessageSquare className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{unreadMessages}</p>
+            <p className="text-3xl font-bold text-foreground">{unreadMessages}</p>
             <p className="text-sm text-muted-foreground">À consulter</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/50 hover:border-primary/30 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total clients
             </CardTitle>
-            <Users className="h-4 w-4 text-primary" />
+            <div className="p-2 rounded-lg bg-accent/50">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{totalClients}</p>
+            <p className="text-3xl font-bold text-foreground">{totalClients}</p>
             <p className="text-sm text-muted-foreground">Inscrits</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Pending Bookings */}
-      <Card>
+      <Card className="border-secondary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
+            <Calendar className="h-5 w-5 text-secondary" />
             Demandes de réservation en attente
           </CardTitle>
           <CardDescription>
@@ -166,18 +193,23 @@ export function AdminOverview() {
         </CardHeader>
         <CardContent>
           {pendingBookings.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              Aucune demande en attente 🎉
-            </p>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
+                <Calendar className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-muted-foreground">
+                Aucune demande en attente 🎉
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
               {pendingBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-yellow-500/20 bg-yellow-500/5"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-secondary/30 bg-secondary/5 hover:bg-secondary/10 transition-colors"
                 >
                   <div className="space-y-1">
-                    <p className="font-medium">
+                    <p className="font-semibold text-foreground">
                       {booking.profiles?.name || "Client inconnu"}
                     </p>
                     <p className="text-sm text-muted-foreground">

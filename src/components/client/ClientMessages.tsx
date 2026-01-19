@@ -174,10 +174,12 @@ export function ClientMessages() {
   }
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader className="border-b">
+    <Card className="h-[600px] flex flex-col border-primary/20">
+      <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
         <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary" />
+          <div className="p-2 rounded-lg bg-primary/10">
+            <MessageSquare className="h-5 w-5 text-primary" />
+          </div>
           Messages avec Anaïs
         </CardTitle>
         <CardDescription>
@@ -189,8 +191,10 @@ export function ClientMessages() {
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                <MessageSquare className="h-8 w-8 text-primary" />
+              </div>
+              <p className="text-muted-foreground font-medium">
                 Aucun message pour le moment.
               </p>
               <p className="text-sm text-muted-foreground">
@@ -207,10 +211,10 @@ export function ClientMessages() {
                     className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                         isOwn
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-foreground"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
+                          : "bg-muted text-foreground rounded-bl-md"
                       }`}
                     >
                       <p className="whitespace-pre-wrap">{message.content}</p>
@@ -232,14 +236,14 @@ export function ClientMessages() {
         {/* Message Input */}
         <form
           onSubmit={handleSendMessage}
-          className="p-4 border-t bg-card"
+          className="p-4 border-t border-border/50 bg-card"
         >
           <div className="flex gap-2">
             <Textarea
               placeholder="Écrivez votre message..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              className="min-h-[80px] resize-none"
+              className="min-h-[80px] resize-none border-border/50 focus:border-primary"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -250,7 +254,7 @@ export function ClientMessages() {
             <Button
               type="submit"
               size="icon"
-              className="h-auto"
+              className="h-auto bg-primary hover:bg-primary/90 shadow-md"
               disabled={isSending || !newMessage.trim()}
             >
               {isSending ? (

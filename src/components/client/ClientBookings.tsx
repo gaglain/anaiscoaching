@@ -169,11 +169,11 @@ export function ClientBookings() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Confirmé</Badge>;
+        return <Badge className="bg-primary/10 text-primary border-primary/20">Confirmé</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">En attente</Badge>;
+        return <Badge className="bg-secondary/10 text-secondary border-secondary/20">En attente</Badge>;
       case "cancelled":
-        return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">Annulé</Badge>;
+        return <Badge className="bg-destructive/10 text-destructive border-destructive/20">Annulé</Badge>;
       default:
         return null;
     }
@@ -199,19 +199,19 @@ export function ClientBookings() {
       {/* New Booking Button */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold">Mes réservations</h2>
+          <h2 className="text-xl font-heading font-semibold text-foreground">Mes réservations</h2>
           <p className="text-muted-foreground">Gérez vos séances de coaching</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-primary hover:bg-primary/90 shadow-md">
               <Plus className="h-4 w-4 mr-2" />
               Nouvelle réservation
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Demander une séance</DialogTitle>
+              <DialogTitle className="font-heading">Demander une séance</DialogTitle>
               <DialogDescription>
                 Remplissez le formulaire pour demander une nouvelle séance avec Anaïs.
               </DialogDescription>
@@ -228,6 +228,7 @@ export function ClientBookings() {
                       onChange={(e) => setSessionDate(e.target.value)}
                       min={new Date().toISOString().split("T")[0]}
                       required
+                      className="border-border focus:border-primary"
                     />
                   </div>
                   <div className="space-y-2">
@@ -238,6 +239,7 @@ export function ClientBookings() {
                       value={sessionTime}
                       onChange={(e) => setSessionTime(e.target.value)}
                       required
+                      className="border-border focus:border-primary"
                     />
                   </div>
                 </div>
@@ -245,7 +247,7 @@ export function ClientBookings() {
                 <div className="space-y-2">
                   <Label htmlFor="type">Type de séance</Label>
                   <Select value={sessionType} onValueChange={setSessionType}>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-border focus:border-primary">
                       <SelectValue placeholder="Choisir le type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -264,6 +266,7 @@ export function ClientBookings() {
                     placeholder="Ex: Renforcement musculaire, cardio..."
                     value={goals}
                     onChange={(e) => setGoals(e.target.value)}
+                    className="border-border focus:border-primary"
                   />
                 </div>
 
@@ -275,6 +278,7 @@ export function ClientBookings() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
+                    className="border-border focus:border-primary"
                   />
                 </div>
               </div>
@@ -282,7 +286,7 @@ export function ClientBookings() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Annuler
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90">
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -299,10 +303,12 @@ export function ClientBookings() {
       </div>
 
       {/* Upcoming Bookings */}
-      <Card>
+      <Card className="border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Calendar className="h-5 w-5 text-primary" />
+            </div>
             Séances à venir
           </CardTitle>
           <CardDescription>
@@ -311,18 +317,23 @@ export function ClientBookings() {
         </CardHeader>
         <CardContent>
           {upcomingBookings.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              Aucune séance à venir. Réservez votre prochaine séance !
-            </p>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
+                <Calendar className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-muted-foreground">
+                Aucune séance à venir. Réservez votre prochaine séance !
+              </p>
+            </div>
           ) : (
             <div className="space-y-4">
               {upcomingBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors"
                 >
                   <div className="space-y-1">
-                    <p className="font-medium">
+                    <p className="font-semibold text-foreground">
                       {format(new Date(booking.session_date), "EEEE d MMMM yyyy", { locale: fr })}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -341,6 +352,7 @@ export function ClientBookings() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleCancelBooking(booking.id)}
+                        className="border-destructive/30 text-destructive hover:bg-destructive/5"
                       >
                         Annuler
                       </Button>
@@ -355,9 +367,9 @@ export function ClientBookings() {
 
       {/* Past Bookings */}
       {pastBookings.length > 0 && (
-        <Card>
+        <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>Historique</CardTitle>
+            <CardTitle className="text-lg">Historique</CardTitle>
             <CardDescription>
               Vos séances passées et annulées
             </CardDescription>
@@ -367,7 +379,7 @@ export function ClientBookings() {
               {pastBookings.slice(0, 10).map((booking) => (
                 <div
                   key={booking.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border bg-muted/30"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border/30 bg-muted/30"
                 >
                   <div className="space-y-1">
                     <p className="font-medium text-muted-foreground">

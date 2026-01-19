@@ -224,7 +224,7 @@ export function AdminMessages() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
       </div>
     );
   }
@@ -232,10 +232,12 @@ export function AdminMessages() {
   return (
     <div className="grid gap-6 lg:grid-cols-3 h-[600px]">
       {/* Conversations List */}
-      <Card className="lg:col-span-1">
-        <CardHeader>
+      <Card className="lg:col-span-1 border-secondary/20">
+        <CardHeader className="bg-gradient-to-r from-secondary/5 to-transparent">
           <CardTitle className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
+            <div className="p-2 rounded-lg bg-secondary/10">
+              <MessageSquare className="h-5 w-5 text-secondary" />
+            </div>
             Conversations
           </CardTitle>
           <CardDescription>
@@ -245,23 +247,28 @@ export function AdminMessages() {
         <CardContent className="p-0">
           <ScrollArea className="h-[480px]">
             {conversations.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8 px-4">
-                Aucune conversation
-              </p>
+              <div className="text-center py-8 px-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/10 mb-4">
+                  <MessageSquare className="h-6 w-6 text-secondary" />
+                </div>
+                <p className="text-muted-foreground">
+                  Aucune conversation
+                </p>
+              </div>
             ) : (
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border/50">
                 {conversations.map((convo) => (
                   <button
                     key={convo.client.id}
                     onClick={() => handleSelectClient(convo.client)}
                     className={`w-full p-4 text-left hover:bg-accent/50 transition-colors ${
-                      selectedClient?.id === convo.client.id ? "bg-accent" : ""
+                      selectedClient?.id === convo.client.id ? "bg-secondary/10 border-l-2 border-secondary" : ""
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium">{convo.client.name}</span>
+                      <span className="font-semibold text-foreground">{convo.client.name}</span>
                       {convo.unreadCount > 0 && (
-                        <Badge variant="default" className="text-xs">
+                        <Badge className="bg-secondary text-secondary-foreground text-xs">
                           {convo.unreadCount}
                         </Badge>
                       )}
@@ -281,12 +288,14 @@ export function AdminMessages() {
       </Card>
 
       {/* Chat Area */}
-      <Card className="lg:col-span-2 flex flex-col">
-        <CardHeader className="border-b">
+      <Card className="lg:col-span-2 flex flex-col border-primary/20">
+        <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
           {selectedClient ? (
             <>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
                 {selectedClient.name}
               </CardTitle>
               <CardDescription>
@@ -301,7 +310,10 @@ export function AdminMessages() {
         </CardHeader>
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           {!selectedClient ? (
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                <MessageSquare className="h-8 w-8 text-primary" />
+              </div>
               <p className="text-muted-foreground">
                 Cliquez sur un client pour voir la conversation
               </p>
@@ -311,6 +323,9 @@ export function AdminMessages() {
               <ScrollArea className="flex-1 p-4" ref={scrollRef}>
                 {messages.length === 0 ? (
                   <div className="text-center py-8">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
+                      <MessageSquare className="h-6 w-6 text-primary" />
+                    </div>
                     <p className="text-muted-foreground">
                       Aucun message. Démarrez la conversation !
                     </p>
@@ -325,16 +340,16 @@ export function AdminMessages() {
                           className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                         >
                           <div
-                            className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                            className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                               isOwn
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-foreground"
+                                ? "bg-secondary text-secondary-foreground rounded-br-md"
+                                : "bg-muted text-foreground rounded-bl-md"
                             }`}
                           >
                             <p className="whitespace-pre-wrap">{message.content}</p>
                             <p
                               className={`text-xs mt-1 ${
-                                isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
+                                isOwn ? "text-secondary-foreground/70" : "text-muted-foreground"
                               }`}
                             >
                               {format(new Date(message.created_at), "d MMM HH:mm", { locale: fr })}
@@ -347,13 +362,13 @@ export function AdminMessages() {
                 )}
               </ScrollArea>
 
-              <form onSubmit={handleSendMessage} className="p-4 border-t bg-card">
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-border/50 bg-card">
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Écrivez votre message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    className="min-h-[60px] resize-none"
+                    className="min-h-[60px] resize-none border-border/50 focus:border-secondary"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
@@ -364,7 +379,7 @@ export function AdminMessages() {
                   <Button
                     type="submit"
                     size="icon"
-                    className="h-auto"
+                    className="h-auto bg-secondary hover:bg-secondary/90 shadow-md"
                     disabled={isSending || !newMessage.trim()}
                   >
                     {isSending ? (
