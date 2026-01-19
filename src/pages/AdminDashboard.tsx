@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MessageSquare, Users, LayoutDashboard, LogOut, Menu, X } from "lucide-react";
+import { Calendar, MessageSquare, Users, LayoutDashboard, LogOut, Menu, X, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { AdminBookings } from "@/components/admin/AdminBookings";
 import { AdminCalendar } from "@/components/admin/AdminCalendar";
 import { AdminMessages } from "@/components/admin/AdminMessages";
 import { AdminClients } from "@/components/admin/AdminClients";
+import logo from "@/assets/logo.png";
 
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
@@ -21,13 +22,12 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b border-border">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="text-xl font-heading font-bold text-primary">AD</span>
-              <span className="text-xl font-heading font-bold text-foreground">Coach</span>
-              <span className="ml-2 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+            <Link to="/" className="flex items-center gap-3">
+              <img src={logo} alt="Anaïs Dubois Coach" className="h-10 w-auto" />
+              <span className="px-2 py-1 rounded-full bg-secondary/20 text-secondary text-xs font-semibold uppercase tracking-wide">
                 Admin
               </span>
             </Link>
@@ -37,7 +37,7 @@ export default function AdminDashboard() {
               <span className="text-sm text-muted-foreground">
                 Anaïs Dubois
               </span>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="border-secondary/20 hover:bg-secondary/5 hover:border-secondary/40">
                 <LogOut className="h-4 w-4 mr-2" />
                 Déconnexion
               </Button>
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
 
             {/* Mobile menu button */}
             <button
-              className="md:hidden p-2"
+              className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -54,12 +54,12 @@ export default function AdminDashboard() {
 
           {/* Mobile menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-border">
+            <div className="md:hidden py-4 border-t border-border animate-in slide-in-from-top-2">
               <div className="flex flex-col gap-4">
                 <span className="text-sm text-muted-foreground">
                   Connectée en tant qu'admin
                 </span>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <Button variant="outline" size="sm" onClick={handleSignOut} className="w-fit">
                   <LogOut className="h-4 w-4 mr-2" />
                   Déconnexion
                 </Button>
@@ -81,24 +81,24 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="overview" className="gap-2">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid bg-muted/50 p-1">
+            <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline">Accueil</span>
             </TabsTrigger>
-            <TabsTrigger value="bookings" className="gap-2">
+            <TabsTrigger value="bookings" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Réservations</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="gap-2">
-              <Calendar className="h-4 w-4" />
+            <TabsTrigger value="calendar" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
+              <CalendarDays className="h-4 w-4" />
               <span className="hidden sm:inline">Calendrier</span>
             </TabsTrigger>
-            <TabsTrigger value="messages" className="gap-2">
+            <TabsTrigger value="messages" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Messages</span>
             </TabsTrigger>
-            <TabsTrigger value="clients" className="gap-2">
+            <TabsTrigger value="clients" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Clients</span>
             </TabsTrigger>
