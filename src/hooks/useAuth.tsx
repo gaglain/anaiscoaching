@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  isRoleLoading: boolean;
   isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
@@ -18,7 +19,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRoleLoading, setIsRoleLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  const refreshAdminStatus = async (userId: string) => {
+    setIsRoleLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (error) {
+        console.error("Failed to fetch admin role:", error);
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(!!data);
+    } catch (e) {
+      console.error("Unexpected error while checking admin role:", e);
+      setIsAdmin(false);
+    } finally {
+      setIsRoleLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -26,22 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
+        // Auth is known as soon as we have the session.
+        // Role can load independently (avoid blocking the whole app).
+        setIsLoading(false);
+
         if (session?.user) {
-          // Check admin status
-          const { data } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id)
-            .eq("role", "admin")
-            .maybeSingle();
-          
-          setIsAdmin(!!data);
+          void refreshAdminStatus(session.user.id);
         } else {
           setIsAdmin(false);
+          setIsRoleLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
@@ -49,20 +71,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
+      // Auth known now
+      setIsLoading(false);
+
       if (session?.user) {
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .maybeSingle()
-          .then(({ data }) => {
-            setIsAdmin(!!data);
-            setIsLoading(false);
-          });
+        void refreshAdminStatus(session.user.id);
       } else {
-        setIsLoading(false);
+        setIsAdmin(false);
+        setIsRoleLoading(false);
       }
     });
 
@@ -96,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         isLoading,
+        isRoleLoading,
         isAdmin,
         signIn,
         signUp,
