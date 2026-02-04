@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,21 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn } = useAuth();
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const { signIn, user, isAdmin, isRoleLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Redirect after login once role is determined
+  useEffect(() => {
+    if (loginSuccess && user && !isRoleLoading) {
+      toast({
+        title: "Connexion réussie",
+        description: isAdmin ? "Bienvenue dans l'espace admin !" : "Bienvenue dans votre espace client !",
+      });
+      navigate(isAdmin ? "/admin" : "/espace-client");
+    }
+  }, [loginSuccess, user, isAdmin, isRoleLoading, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,11 +42,7 @@ export default function Login() {
       });
       setIsSubmitting(false);
     } else {
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue dans votre espace client !",
-      });
-      navigate("/espace-client");
+      setLoginSuccess(true);
     }
   };
 
