@@ -207,6 +207,20 @@ export function AdminMessages() {
         });
       }
 
+      // Send push notification
+      try {
+        await supabase.functions.invoke('send-push', {
+          body: {
+            userId: selectedClient.id,
+            title: 'Nouveau message de votre coach',
+            body: newMessage.trim().substring(0, 100),
+            url: '/espace-client?tab=messages',
+          },
+        });
+      } catch (pushError) {
+        console.error('Push notification error:', pushError);
+      }
+
       setMessages((prev) => [...prev, data]);
       setNewMessage("");
       fetchConversations();

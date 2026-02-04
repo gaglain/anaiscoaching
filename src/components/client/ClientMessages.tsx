@@ -143,7 +143,7 @@ export function ClientMessages() {
         .eq("id", user.id)
         .single();
 
-      // Notify admin about new message
+      // Notify admin about new message (email)
       notifyAdmin({
         type: "new_message",
         data: {
@@ -151,6 +151,20 @@ export function ClientMessages() {
           messagePreview: newMessage.trim().substring(0, 100),
         },
       });
+
+      // Send push notification to admin
+      try {
+        await supabase.functions.invoke('send-push', {
+          body: {
+            userId: adminId,
+            title: `Message de ${profile?.name || 'Client'}`,
+            body: newMessage.trim().substring(0, 100),
+            url: '/admin?tab=messages',
+          },
+        });
+      } catch (pushError) {
+        console.error('Push notification error:', pushError);
+      }
 
       setMessages((prev) => [...prev, data]);
       setNewMessage("");
