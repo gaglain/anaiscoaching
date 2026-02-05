@@ -1,3 +1,5 @@
+@import url('https://fonts.cdnfonts.com/css/futura-pt');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,8 +9,6 @@
    Colors: Teal/Turquoise with Orange accent
    Font: Futura PT
 */
-
-@import url('https://fonts.cdnfonts.com/css/futura-pt');
 
 @layer base {
   :root {
