@@ -2,16 +2,20 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MessageSquare, Home, LogOut, Menu, X } from "lucide-react";
+import { Calendar, MessageSquare, Home, LogOut, Menu, X, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ClientOverview } from "@/components/client/ClientOverview";
 import { ClientBookings } from "@/components/client/ClientBookings";
 import { ClientMessages } from "@/components/client/ClientMessages";
+import { ClientStats } from "@/components/client/ClientStats";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import logo from "@/assets/logo.png";
 
 export default function ClientDashboard() {
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const { unreadCount } = useUnreadMessages();
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,6 +33,20 @@ export default function ClientDashboard() {
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab("messages")}
+                className="relative"
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Messages
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Button>
               <span className="text-sm text-muted-foreground">
                 Bonjour, <span className="font-semibold text-foreground">{user?.user_metadata?.name || user?.email?.split('@')[0]}</span>
               </span>
@@ -51,6 +69,23 @@ export default function ClientDashboard() {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-border animate-in slide-in-from-top-2">
               <div className="flex flex-col gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setActiveTab("messages");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="justify-start relative w-fit"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Messages
+                  {unreadCount > 0 && (
+                    <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Button>
                 <span className="text-sm text-muted-foreground">
                   Connecté en tant que <span className="font-semibold text-foreground">{user?.email}</span>
                 </span>
@@ -75,8 +110,8 @@ export default function ClientDashboard() {
           </p>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid bg-muted/50 p-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid bg-muted/50 p-1">
             <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Accueil</span>
@@ -85,9 +120,18 @@ export default function ClientDashboard() {
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:inline">Réservations</span>
             </TabsTrigger>
-            <TabsTrigger value="messages" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="stats" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Statistiques</span>
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative">
               <MessageSquare className="h-4 w-4" />
               <span className="hidden sm:inline">Messages</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[9px] font-bold text-secondary-foreground">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </TabsTrigger>
           </TabsList>
 
@@ -97,6 +141,10 @@ export default function ClientDashboard() {
 
           <TabsContent value="bookings">
             <ClientBookings />
+          </TabsContent>
+
+          <TabsContent value="stats">
+            <ClientStats />
           </TabsContent>
 
           <TabsContent value="messages">
