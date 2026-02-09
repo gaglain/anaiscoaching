@@ -3,12 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, X, Loader2, Download } from "lucide-react";
+import { Calendar, Check, X, Loader2, Download, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { sendEmail, getSessionTypeLabel } from "@/lib/emails";
+import { exportBookingsToCSV, type ExportBooking } from "@/lib/exportCsv";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings"> & {
@@ -161,25 +162,55 @@ END:VCALENDAR`;
     );
   }
 
+  const handleExportCSV = () => {
+    const exportData: ExportBooking[] = bookings.map((booking) => ({
+      clientName: booking.profiles?.name || "Client inconnu",
+      clientEmail: booking.profiles?.email || null,
+      clientPhone: booking.profiles?.phone || null,
+      session_date: booking.session_date,
+      session_type: booking.session_type,
+      status: booking.status,
+      goals: booking.goals,
+      notes: booking.notes,
+    }));
+
+    exportBookingsToCSV(exportData);
+
+    toast({
+      title: "Export réussi",
+      description: `${bookings.length} réservation(s) exportée(s) en CSV.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
           <h2 className="text-xl font-heading font-semibold text-foreground">Gestion des réservations</h2>
           <p className="text-muted-foreground">Validez et gérez les demandes de séance</p>
         </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-[180px] border-border focus:border-secondary">
-            <SelectValue placeholder="Filtrer par statut" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous les statuts</SelectItem>
-            <SelectItem value="pending">En attente</SelectItem>
-            <SelectItem value="confirmed">Confirmés</SelectItem>
-            <SelectItem value="cancelled">Annulés</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-[180px] border-border focus:border-secondary">
+              <SelectValue placeholder="Filtrer par statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="confirmed">Confirmés</SelectItem>
+              <SelectItem value="cancelled">Annulés</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            onClick={handleExportCSV}
+            className="border-secondary/30 hover:bg-secondary/5 shrink-0"
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Exporter</span>
+          </Button>
+        </div>
       </div>
 
       {/* Upcoming Bookings */}
