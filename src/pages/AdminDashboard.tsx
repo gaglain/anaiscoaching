@@ -4,13 +4,14 @@ import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MessageSquare, Users, LayoutDashboard, LogOut, Menu, X, CalendarDays, Home } from "lucide-react";
+import { Calendar, MessageSquare, Users, LayoutDashboard, LogOut, Menu, X, CalendarDays, Home, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { AdminBookings } from "@/components/admin/AdminBookings";
 import { AdminCalendar } from "@/components/admin/AdminCalendar";
 import { AdminMessages } from "@/components/admin/AdminMessages";
 import { AdminClients } from "@/components/admin/AdminClients";
+import { AdminDocuments } from "@/components/admin/AdminDocuments";
 import logo from "@/assets/logo.png";
 
 export default function AdminDashboard() {
@@ -124,7 +125,7 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid bg-muted/50 p-1">
             <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline">Accueil</span>
@@ -146,6 +147,10 @@ export default function AdminDashboard() {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="documents" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Documents</span>
+            </TabsTrigger>
             <TabsTrigger value="clients" className="gap-2 data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground">
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Clients</span>
@@ -166,6 +171,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="messages">
             <AdminMessages />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <AdminDocuments />
           </TabsContent>
 
           <TabsContent value="clients">
