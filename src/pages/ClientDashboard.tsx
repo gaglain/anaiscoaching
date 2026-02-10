@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MessageSquare, Home, LogOut, Menu, X, BarChart3 } from "lucide-react";
+import { Calendar, MessageSquare, Home, LogOut, Menu, X, BarChart3, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ClientOverview } from "@/components/client/ClientOverview";
 import { ClientBookings } from "@/components/client/ClientBookings";
 import { ClientMessages } from "@/components/client/ClientMessages";
 import { ClientStats } from "@/components/client/ClientStats";
+import { ClientDocuments } from "@/components/client/ClientDocuments";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import logo from "@/assets/logo.png";
 
@@ -111,7 +112,7 @@ export default function ClientDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid bg-muted/50 p-1">
             <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Accueil</span>
@@ -123,6 +124,10 @@ export default function ClientDashboard() {
             <TabsTrigger value="stats" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Statistiques</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Documents</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative">
               <MessageSquare className="h-4 w-4" />
@@ -145,6 +150,10 @@ export default function ClientDashboard() {
 
           <TabsContent value="stats">
             <ClientStats />
+          </TabsContent>
+
+          <TabsContent value="documents">
+            <ClientDocuments />
           </TabsContent>
 
           <TabsContent value="messages">
