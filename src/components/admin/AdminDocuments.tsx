@@ -126,6 +126,27 @@ export function AdminDocuments() {
 
       if (insertError) throw insertError;
 
+      // Send email notification to client
+      const client = clients.find((c) => c.id === uploadClientId);
+      const clientProfile = client
+        ? await supabase.from("profiles").select("email").eq("id", uploadClientId).single()
+        : null;
+
+      if (clientProfile?.data?.email) {
+        supabase.functions.invoke("send-email", {
+          body: {
+            type: "new_document",
+            to: clientProfile.data.email,
+            data: {
+              clientName: client?.name || "Client",
+              documentName: uploadFile.name,
+              category: getCategoryLabel(uploadCategory),
+              description: uploadDescription || undefined,
+            },
+          },
+        }).catch((err) => console.error("Email notification error:", err));
+      }
+
       toast({
         title: "Document partagé",
         description: `"${uploadFile.name}" a été envoyé au client.`,
