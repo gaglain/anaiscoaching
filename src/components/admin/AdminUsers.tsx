@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Shield, ShieldCheck, Search, Loader2, UserCog, ShieldOff } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Shield, ShieldCheck, Search, Loader2, UserCog, ShieldOff, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,10 +31,21 @@ export function AdminUsers() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Role change dialog
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; user: UserWithRole | null; action: "promote" | "demote" }>({
     open: false, user: null, action: "promote",
   });
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Create user dialog
+  const [createDialog, setCreateDialog] = useState(false);
+  const [newUser, setNewUser] = useState({ name: "", email: "", password: "", role: "client" });
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Delete user dialog
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; user: UserWithRole | null }>({ open: false, user: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -48,7 +63,6 @@ export function AdminUsers() {
 
       const roleMap = new Map<string, "admin" | "client">();
       for (const r of rolesRes.data || []) {
-        // If a user has admin role anywhere, mark as admin
         if (r.role === "admin") {
           roleMap.set(r.user_id, "admin");
         } else if (!roleMap.has(r.user_id)) {
@@ -77,12 +91,10 @@ export function AdminUsers() {
 
     try {
       if (action === "promote") {
-        // Insert admin role
         const { error } = await supabase.from("user_roles").insert({ user_id: targetUser.id, role: "admin" as any });
         if (error) throw error;
         toast({ title: "Rôle mis à jour", description: `${targetUser.name} est maintenant administrateur.` });
       } else {
-        // Remove admin role
         const { error } = await supabase.from("user_roles").delete().eq("user_id", targetUser.id).eq("role", "admin" as any);
         if (error) throw error;
         toast({ title: "Rôle mis à jour", description: `${targetUser.name} n'est plus administrateur.` });
@@ -94,6 +106,59 @@ export function AdminUsers() {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      toast({ title: "Erreur", description: "Tous les champs sont requis.", variant: "destructive" });
+      return;
+    }
+    if (newUser.password.length < 6) {
+      toast({ title: "Erreur", description: "Le mot de passe doit contenir au moins 6 caractères.", variant: "destructive" });
+      return;
+    }
+    setIsCreating(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "create", ...newUser },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "Utilisateur créé", description: `${newUser.name} a été ajouté avec succès.` });
+      setCreateDialog(false);
+      setNewUser({ name: "", email: "", password: "", role: "client" });
+      fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    const targetUser = deleteDialog.user;
+    if (!targetUser) return;
+    setIsDeleting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "delete", user_id: targetUser.id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "Utilisateur supprimé", description: `${targetUser.name} a été supprimé.` });
+      setDeleteDialog({ open: false, user: null });
+      fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -123,14 +188,20 @@ export function AdminUsers() {
             {users.length} utilisateur(s) — {adminCount} admin(s)
           </p>
         </div>
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 border-border focus:border-secondary"
-          />
+        <div className="flex gap-2 items-start">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 border-border focus:border-secondary"
+            />
+          </div>
+          <Button onClick={() => setCreateDialog(true)} className="bg-secondary text-secondary-foreground hover:bg-secondary/90 shrink-0">
+            <Plus className="h-4 w-4 mr-1" />
+            Ajouter
+          </Button>
         </div>
       </div>
 
@@ -184,34 +255,44 @@ export function AdminUsers() {
                   </div>
 
                   {!isSelf && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setConfirmDialog({
-                          open: true,
-                          user: u,
-                          action: isAdmin ? "demote" : "promote",
-                        })
-                      }
-                      className={
-                        isAdmin
-                          ? "border-destructive/30 text-destructive hover:bg-destructive/5 shrink-0"
-                          : "border-secondary/30 text-secondary hover:bg-secondary/5 shrink-0"
-                      }
-                    >
-                      {isAdmin ? (
-                        <>
-                          <ShieldOff className="h-4 w-4 mr-1" />
-                          Retirer admin
-                        </>
-                      ) : (
-                        <>
-                          <ShieldCheck className="h-4 w-4 mr-1" />
-                          Promouvoir admin
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setConfirmDialog({
+                            open: true,
+                            user: u,
+                            action: isAdmin ? "demote" : "promote",
+                          })
+                        }
+                        className={
+                          isAdmin
+                            ? "border-destructive/30 text-destructive hover:bg-destructive/5"
+                            : "border-secondary/30 text-secondary hover:bg-secondary/5"
+                        }
+                      >
+                        {isAdmin ? (
+                          <>
+                            <ShieldOff className="h-4 w-4 mr-1" />
+                            Retirer admin
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck className="h-4 w-4 mr-1" />
+                            Promouvoir
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeleteDialog({ open: true, user: u })}
+                        className="border-destructive/30 text-destructive hover:bg-destructive/5"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -220,7 +301,7 @@ export function AdminUsers() {
         </div>
       )}
 
-      {/* Confirm dialog */}
+      {/* Role change dialog */}
       <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}>
         <DialogContent>
           <DialogHeader>
@@ -229,21 +310,81 @@ export function AdminUsers() {
             </DialogTitle>
             <DialogDescription>
               {confirmDialog.action === "promote"
-                ? `${confirmDialog.user?.name} aura accès à l'ensemble du back-office (réservations, clients, messages, documents).`
-                : `${confirmDialog.user?.name} n'aura plus accès au back-office et sera redirigé(e) vers l'espace client.`}
+                ? `${confirmDialog.user?.name} aura accès à l'ensemble du back-office.`
+                : `${confirmDialog.user?.name} n'aura plus accès au back-office.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setConfirmDialog({ open: false, user: null, action: "promote" })}>
               Annuler
             </Button>
-            <Button
-              onClick={handleRoleChange}
-              disabled={isUpdating}
-              variant={confirmDialog.action === "demote" ? "destructive" : "default"}
-            >
-              {isUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {confirmDialog.action === "promote" ? "Confirmer la promotion" : "Confirmer le retrait"}
+            <Button onClick={handleRoleChange} disabled={isUpdating} variant={confirmDialog.action === "demote" ? "destructive" : "default"}>
+              {isUpdating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {confirmDialog.action === "promote" ? "Confirmer" : "Retirer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create user dialog */}
+      <Dialog open={createDialog} onOpenChange={setCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter un utilisateur</DialogTitle>
+            <DialogDescription>
+              Créez un nouveau compte utilisateur. Il pourra se connecter immédiatement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-name">Nom complet</Label>
+              <Input id="new-name" value={newUser.name} onChange={(e) => setNewUser((p) => ({ ...p, name: e.target.value }))} placeholder="Jean Dupont" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-email">Email</Label>
+              <Input id="new-email" type="email" value={newUser.email} onChange={(e) => setNewUser((p) => ({ ...p, email: e.target.value }))} placeholder="jean@exemple.fr" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Mot de passe</Label>
+              <Input id="new-password" type="password" value={newUser.password} onChange={(e) => setNewUser((p) => ({ ...p, password: e.target.value }))} placeholder="Min. 6 caractères" />
+            </div>
+            <div className="space-y-2">
+              <Label>Rôle</Label>
+              <Select value={newUser.role} onValueChange={(v) => setNewUser((p) => ({ ...p, role: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="client">Client</SelectItem>
+                  <SelectItem value="admin">Administrateur</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setCreateDialog(false)}>Annuler</Button>
+            <Button onClick={handleCreateUser} disabled={isCreating} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
+              {isCreating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Créer l'utilisateur
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete user dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer l'utilisateur</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer <strong>{deleteDialog.user?.name}</strong> ? Cette action est irréversible. Toutes ses données (réservations, messages, documents) seront supprimées.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, user: null })}>Annuler</Button>
+            <Button variant="destructive" onClick={handleDeleteUser} disabled={isDeleting}>
+              {isDeleting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Supprimer définitivement
             </Button>
           </DialogFooter>
         </DialogContent>
