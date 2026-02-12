@@ -54,6 +54,22 @@ Deno.serve(async (req) => {
         await adminClient.from("user_roles").insert({ user_id: newUser.user.id, role: "admin" });
       }
 
+      // Send welcome email with credentials
+      try {
+        const emailUrl = `${supabaseUrl}/functions/v1/send-email`;
+        await fetch(emailUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}` },
+          body: JSON.stringify({
+            type: "account_created",
+            to: email,
+            data: { clientName: name, email, password, role: role || "client" },
+          }),
+        });
+      } catch (emailErr) {
+        console.error("Failed to send welcome email:", emailErr);
+      }
+
       return new Response(JSON.stringify({ success: true, user_id: newUser.user?.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

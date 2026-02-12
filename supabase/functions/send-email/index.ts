@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document";
+  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document" | "account_created";
   to: string;
   data: {
     clientName?: string;
@@ -22,6 +22,9 @@ interface EmailRequest {
     documentName?: string;
     category?: string;
     description?: string;
+    email?: string;
+    password?: string;
+    role?: string;
   };
 }
 
@@ -182,6 +185,34 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
             <p style="margin-top: 24px; color: #666;">
               À bientôt,<br>
               <strong>Anaïs</strong>
+            </p>
+          </div>
+        `,
+      };
+
+    case "account_created":
+      return {
+        subject: "Votre compte Coach Anaïs a été créé 🎉",
+        html: `
+          <div style="${baseStyle}">
+            <h1 style="color: #f05a28;">Bienvenue ${data.clientName} !</h1>
+            <p>Un compte a été créé pour vous sur la plateforme de coaching d'Anaïs Dubois.</p>
+            <p>Voici vos identifiants de connexion :</p>
+            <div style="background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f05a28;">
+              <p><strong>📧 Email :</strong> ${data.email}</p>
+              <p><strong>🔑 Mot de passe :</strong> ${data.password}</p>
+              <p><strong>👤 Rôle :</strong> ${data.role === "admin" ? "Administrateur" : "Client"}</p>
+            </div>
+            <p style="color: #e53e3e; font-weight: 600;">⚠️ Nous vous recommandons de changer votre mot de passe dès votre première connexion.</p>
+            <p style="margin-top: 24px;">
+              <a href="https://coachsportif-rennes.fr/connexion" style="${buttonStyle}">
+                Se connecter
+              </a>
+            </p>
+            <p style="margin-top: 24px; color: #666;">
+              À très vite,<br>
+              <strong>Anaïs Dubois</strong><br>
+              Coach sportif à Rennes
             </p>
           </div>
         `,
