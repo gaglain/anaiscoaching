@@ -1,6 +1,6 @@
 import { ArrowRight, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import anaisHero from "@/assets/anais-hero.jpg";
+import anaisHero from "@/assets/anais-hero.webp";
 
 export function HeroSection() {
   return (

@@ -1,7 +1,7 @@
 import { GraduationCap, Award, Heart, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import anaisPortrait from "@/assets/anais-portrait.jpg";
-import anaisCoaching from "@/assets/anais-coaching.jpg";
+import anaisPortrait from "@/assets/anais-portrait.webp";
+import anaisCoaching from "@/assets/anais-coaching.webp";
 
 const credentials = [
   {
