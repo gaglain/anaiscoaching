@@ -58,11 +58,11 @@ export async function subscribeToPushNotifications(
     const registration = await navigator.serviceWorker.ready;
     
     // Check if already subscribed
-    let subscription = await registration.pushManager.getSubscription();
+    let subscription = await (registration as any).pushManager.getSubscription();
     
     if (!subscription) {
       const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-      subscription = await registration.pushManager.subscribe({
+      subscription = await (registration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
       });
@@ -101,7 +101,7 @@ export async function unsubscribeFromPushNotifications(
 ): Promise<boolean> {
   try {
     const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
+    const subscription = await (registration as any).pushManager.getSubscription();
     
     if (subscription) {
       await subscription.unsubscribe();
@@ -139,7 +139,7 @@ export async function getPushNotificationStatus(): Promise<{
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
+    const subscription = await (registration as any).pushManager.getSubscription();
     subscribed = !!subscription;
   } catch {
     // Ignore errors

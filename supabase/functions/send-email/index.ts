@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome";
+  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document";
   to: string;
   data: {
     clientName?: string;
@@ -19,6 +19,9 @@ interface EmailRequest {
     sessionTime?: string;
     sessionType?: string;
     messagePreview?: string;
+    documentName?: string;
+    category?: string;
+    description?: string;
   };
 }
 
@@ -153,6 +156,32 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
               <a href="https://coachsportif-rennes.fr/espace-client" style="${buttonStyle}">
                 Lire le message
               </a>
+            </p>
+          </div>
+        `,
+      };
+
+    case "new_document":
+      return {
+        subject: "Nouveau document partagé 📎",
+        html: `
+          <div style="${baseStyle}">
+            <h1 style="color: #f05a28;">Un document vous a été partagé</h1>
+            <p>Bonjour ${data.clientName},</p>
+            <p>Anaïs vient de partager un nouveau document avec vous :</p>
+            <div style="background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f05a28;">
+              <p><strong>📎 Fichier :</strong> ${data.documentName}</p>
+              <p><strong>📂 Catégorie :</strong> ${data.category}</p>
+              ${data.description ? `<p><strong>💬 Note :</strong> ${data.description}</p>` : ""}
+            </div>
+            <p style="margin-top: 24px;">
+              <a href="https://coachsportif-rennes.fr/espace-client" style="${buttonStyle}">
+                Voir mes documents
+              </a>
+            </p>
+            <p style="margin-top: 24px; color: #666;">
+              À bientôt,<br>
+              <strong>Anaïs</strong>
             </p>
           </div>
         `,
