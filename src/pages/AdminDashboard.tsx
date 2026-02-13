@@ -14,6 +14,7 @@ import { AdminClients } from "@/components/admin/AdminClients";
 import { AdminDocuments } from "@/components/admin/AdminDocuments";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminUsers } from "@/components/admin/AdminUsers";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import logo from "@/assets/logo.png";
 
 export default function AdminDashboard() {
@@ -47,20 +48,7 @@ export default function AdminDashboard() {
                   Accueil
                 </Button>
               </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 relative"
-                onClick={() => setActiveTab("messages")}
-              >
-                <MessageSquare className="h-4 w-4" />
-                Messages
-                {unreadCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive text-destructive-foreground">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </Badge>
-                )}
-              </Button>
+              <NotificationCenter onNavigate={setActiveTab} />
               <span className="text-sm text-muted-foreground">
                 Anaïs Dubois
               </span>
