@@ -11,6 +11,7 @@ import { FileText, Upload, Loader2, Trash2, Download, Search, FolderOpen } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useCategories } from "@/hooks/useCategories";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -28,17 +29,6 @@ interface SharedDocument {
   profiles?: { name: string } | null;
 }
 
-const CATEGORIES = [
-  { value: "general", label: "Général" },
-  { value: "programme", label: "Programme d'entraînement" },
-  { value: "nutrition", label: "Nutrition" },
-  { value: "bilan", label: "Bilan / Suivi" },
-  { value: "facture", label: "Facture" },
-];
-
-const getCategoryLabel = (value: string) =>
-  CATEGORIES.find((c) => c.value === value)?.label || value;
-
 const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} o`;
   if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} Ko`;
@@ -55,6 +45,7 @@ const getFileIcon = (type: string) => {
 export function AdminDocuments() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { categories: docCategories } = useCategories("document");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [documents, setDocuments] = useState<SharedDocument[]>([]);
@@ -67,7 +58,7 @@ export function AdminDocuments() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadClientId, setUploadClientId] = useState("");
-  const [uploadCategory, setUploadCategory] = useState("general");
+  const [uploadCategory, setUploadCategory] = useState("");
   const [uploadDescription, setUploadDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
@@ -140,7 +131,7 @@ export function AdminDocuments() {
             data: {
               clientName: client?.name || "Client",
               documentName: uploadFile.name,
-              category: getCategoryLabel(uploadCategory),
+              category: docCategories.find(c => c.name === uploadCategory)?.name || uploadCategory,
               description: uploadDescription || undefined,
             },
           },
@@ -195,7 +186,7 @@ export function AdminDocuments() {
     setIsUploadOpen(false);
     setUploadFile(null);
     setUploadClientId("");
-    setUploadCategory("general");
+    setUploadCategory("");
     setUploadDescription("");
   };
 
@@ -240,8 +231,8 @@ export function AdminDocuments() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes catégories</SelectItem>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+              {docCategories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -278,7 +269,7 @@ export function AdminDocuments() {
                         <span>{doc.profiles?.name || "Client inconnu"}</span>
                         <span>•</span>
                         <Badge variant="outline" className="text-xs">
-                          {getCategoryLabel(doc.category)}
+                          {doc.category}
                         </Badge>
                         <span>•</span>
                         <span>{formatFileSize(doc.file_size)}</span>
@@ -350,8 +341,8 @@ export function AdminDocuments() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                  {docCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

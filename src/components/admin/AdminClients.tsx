@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useCategories } from "@/hooks/useCategories";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportClientsToCSV, type ExportClient } from "@/lib/exportCsv";
@@ -25,9 +26,11 @@ interface ClientWithStats extends Profile {
 
 export function AdminClients() {
   const { toast } = useToast();
+  const { categories: clientCategories } = useCategories("client");
   const [clients, setClients] = useState<ClientWithStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterTag, setFilterTag] = useState("all");
   const [selectedClient, setSelectedClient] = useState<ClientWithStats | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -156,9 +159,11 @@ export function AdminClients() {
     });
   };
 
-  const filteredClients = clients.filter((client) =>
-    client.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredClients = clients.filter((client) => {
+    const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTag = filterTag === "all" || ((client as any).tags || []).includes(filterTag);
+    return matchesSearch && matchesTag;
+  });
 
   const getLevelBadge = (level: string | null) => {
     switch (level) {
@@ -189,7 +194,7 @@ export function AdminClients() {
           <h2 className="text-xl font-heading font-semibold text-foreground">Liste des clients</h2>
           <p className="text-muted-foreground">{clients.length} client(s) inscrit(s)</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -199,6 +204,17 @@ export function AdminClients() {
               className="pl-10 border-border focus:border-secondary"
             />
           </div>
+          <Select value={filterTag} onValueChange={setFilterTag}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Catégorie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes catégories</SelectItem>
+              {clientCategories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             onClick={handleExportCSV}
@@ -358,9 +374,8 @@ export function AdminClients() {
                 />
               </div>
 
-              {/* Tags */}
               <div className="space-y-2">
-                <Label>Tags</Label>
+                <Label>Catégories / Tags</Label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {editTags.map((tag) => (
                     <Badge key={tag} variant="secondary" className="gap-1 pr-1">
@@ -375,11 +390,27 @@ export function AdminClients() {
                     </Badge>
                   ))}
                 </div>
+                {/* Quick-add from predefined categories */}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {clientCategories
+                    .filter((cat) => !editTags.includes(cat.name))
+                    .map((cat) => (
+                      <Badge
+                        key={cat.id}
+                        variant="outline"
+                        className="cursor-pointer hover:bg-secondary/10 text-xs"
+                        onClick={() => setEditTags([...editTags, cat.name])}
+                      >
+                        <Plus className="h-2.5 w-2.5 mr-0.5" />
+                        {cat.name}
+                      </Badge>
+                    ))}
+                </div>
                 <div className="flex gap-2">
                   <Input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Ajouter un tag..."
+                    placeholder="Ajouter un tag personnalisé..."
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
