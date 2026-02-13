@@ -8,6 +8,7 @@ import { Settings, CreditCard, Eye, EyeOff, Save, Lock, Tag, FolderOpen, Plus, T
 import { toast } from "@/hooks/use-toast";
 import { NotificationToggle } from "@/components/NotificationToggle";
 import { useCategories } from "@/hooks/useCategories";
+import { CalendarSyncSettings } from "@/components/admin/CalendarSyncSettings";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -87,6 +88,9 @@ export function AdminSettings() {
     <div className="space-y-6">
       {/* Notifications */}
       <NotificationToggle />
+
+      {/* Calendar Sync */}
+      <CalendarSyncSettings />
 
       {/* Password */}
       <Card>

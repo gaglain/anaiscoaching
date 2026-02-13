@@ -1,1 +1,7 @@
 project_id = "nycrvkfayqjoeumxftnw"
+
+[functions.google-calendar-callback]
+verify_jwt = false
+
+[functions.outlook-calendar-callback]
+verify_jwt = false
