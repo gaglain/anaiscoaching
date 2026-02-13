@@ -76,6 +76,23 @@ export function AdminBookings() {
         });
       }
 
+      // Send push notification to client
+      try {
+        const sessionDate = new Date(booking.session_date);
+        const formattedDate = format(sessionDate, "d MMM yyyy", { locale: fr });
+        const formattedTime = format(sessionDate, "HH:mm", { locale: fr });
+        await supabase.functions.invoke("send-push", {
+          body: {
+            userId: booking.client_id,
+            title: status === "confirmed" ? "✅ Séance confirmée" : "❌ Séance annulée",
+            body: `${getSessionTypeLabel(booking.session_type)} — ${formattedDate} à ${formattedTime}`,
+            url: "/espace-client?tab=bookings",
+          },
+        });
+      } catch (pushError) {
+        console.error("Push notification error:", pushError);
+      }
+
       toast({
         title: status === "confirmed" ? "Réservation confirmée" : "Réservation annulée",
         description: "Le statut a été mis à jour et le client notifié par email.",
