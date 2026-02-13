@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Send, Loader2, User } from "lucide-react";
+import { MessageSquare, Send, Loader2, User, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -32,10 +34,14 @@ export function AdminMessages() {
   const [isSending, setIsSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isNewConvoOpen, setIsNewConvoOpen] = useState(false);
+  const [allClients, setAllClients] = useState<Profile[]>([]);
+  const [selectedNewClient, setSelectedNewClient] = useState<string>("");
 
   useEffect(() => {
     if (user) {
       fetchConversations();
+      fetchAllClients();
 
       // Subscribe to new messages
       const channel = supabase
@@ -67,6 +73,11 @@ export function AdminMessages() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const fetchAllClients = async () => {
+    const { data } = await supabase.from("profiles").select("*").order("name");
+    setAllClients(data || []);
+  };
 
   const fetchConversations = async () => {
     if (!user) return;
@@ -248,12 +259,17 @@ export function AdminMessages() {
       {/* Conversations List */}
       <Card className="lg:col-span-1 border-secondary/20">
         <CardHeader className="bg-gradient-to-r from-secondary/5 to-transparent">
-          <CardTitle className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-secondary/10">
-              <MessageSquare className="h-5 w-5 text-secondary" />
-            </div>
-            Conversations
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-secondary/10">
+                <MessageSquare className="h-5 w-5 text-secondary" />
+              </div>
+              Conversations
+            </CardTitle>
+            <Button size="icon" variant="outline" onClick={() => setIsNewConvoOpen(true)} title="Nouveau message">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
           <CardDescription>
             {conversations.length} client(s)
           </CardDescription>
@@ -408,6 +424,45 @@ export function AdminMessages() {
           )}
         </CardContent>
       </Card>
+      {/* New Conversation Dialog */}
+      <Dialog open={isNewConvoOpen} onOpenChange={setIsNewConvoOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nouveau message</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={selectedNewClient} onValueChange={setSelectedNewClient}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir un client..." />
+              </SelectTrigger>
+              <SelectContent>
+                {allClients
+                  .filter((c) => c.id !== user?.id)
+                  .map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} {c.email ? `(${c.email})` : ""}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={!selectedNewClient}
+              onClick={() => {
+                const client = allClients.find((c) => c.id === selectedNewClient);
+                if (client) {
+                  handleSelectClient(client);
+                  setIsNewConvoOpen(false);
+                  setSelectedNewClient("");
+                }
+              }}
+            >
+              Démarrer la conversation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

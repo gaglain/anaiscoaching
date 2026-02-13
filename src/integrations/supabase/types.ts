@@ -94,6 +94,7 @@ export type Database = {
           level: string | null
           name: string
           phone: string | null
+          tags: string[] | null
           updated_at: string
         }
         Insert: {
@@ -104,6 +105,7 @@ export type Database = {
           level?: string | null
           name: string
           phone?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -114,6 +116,7 @@ export type Database = {
           level?: string | null
           name?: string
           phone?: string | null
+          tags?: string[] | null
           updated_at?: string
         }
         Relationships: []
