@@ -46,13 +46,16 @@ export default function ClientDashboard() {
               </Button>
             </div>
 
-            {/* Mobile menu button */}
-            <button
-              className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Mobile nav */}
+            <div className="md:hidden flex items-center gap-1">
+              <NotificationCenter onNavigate={(tab) => { setActiveTab(tab); setMobileMenuOpen(false); }} />
+              <button
+                className="p-2 rounded-lg hover:bg-accent transition-colors"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
 
           {/* Mobile menu */}
