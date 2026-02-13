@@ -116,6 +116,29 @@ export function ClientBookings() {
         },
       });
 
+      // Send push notification to admin
+      try {
+        const { data: adminRole } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "admin")
+          .limit(1)
+          .maybeSingle();
+
+        if (adminRole) {
+          await supabase.functions.invoke("send-push", {
+            body: {
+              userId: adminRole.user_id,
+              title: `Nouvelle réservation de ${clientName}`,
+              body: `${getSessionTypeLabel(sessionType)} — ${formattedDate} à ${formattedTime}`,
+              url: "/admin?tab=bookings",
+            },
+          });
+        }
+      } catch (pushError) {
+        console.error("Push notification error:", pushError);
+      }
+
       toast({
         title: "Demande envoyée !",
         description: "Votre demande de réservation a été envoyée. Anaïs vous confirmera rapidement.",
