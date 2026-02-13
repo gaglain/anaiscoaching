@@ -26,11 +26,12 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('Service Worker registered:', registration);
+    // Wait for the VitePWA-registered service worker to be ready
+    const registration = await navigator.serviceWorker.ready;
+    console.log('Service Worker ready:', registration);
     return registration;
   } catch (error) {
-    console.error('Service Worker registration failed:', error);
+    console.error('Service Worker not available:', error);
     return null;
   }
 }

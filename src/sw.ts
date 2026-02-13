@@ -1,22 +1,35 @@
-// Service Worker for Push Notifications
-const CACHE_NAME = 'coach-anais-v1';
+/// <reference lib="webworker" />
+import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { NetworkFirst } from 'workbox-strategies';
+import { ExpirationPlugin } from 'workbox-expiration';
 
-// Install event
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-});
+declare let self: ServiceWorkerGlobalScope;
 
-// Activate event
-self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
-});
+// Workbox precaching (injected by VitePWA)
+precacheAndRoute(self.__WB_MANIFEST);
 
-// Push notification event
+// Runtime caching for Supabase API calls
+registerRoute(
+  /^https:\/\/.*\.supabase\.co\/.*/i,
+  new NetworkFirst({
+    cacheName: 'supabase-cache',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 50,
+        maxAgeSeconds: 60 * 60 * 24, // 24 hours
+      }),
+    ],
+  })
+);
+
+// ===== Push Notification Handlers =====
+
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   const data = event.data.json();
-  
+
   const options = {
     body: data.body || 'Vous avez reçu un nouveau message',
     icon: '/icon-192.png',
@@ -27,25 +40,18 @@ self.addEventListener('push', (event) => {
       dateOfArrival: Date.now(),
     },
     actions: [
-      {
-        action: 'open',
-        title: 'Ouvrir',
-      },
-      {
-        action: 'close',
-        title: 'Fermer',
-      },
+      { action: 'open', title: 'Ouvrir' },
+      { action: 'close', title: 'Fermer' },
     ],
     tag: 'message-notification',
     renotify: true,
-  };
+  } as any;
 
   event.waitUntil(
     self.registration.showNotification(data.title || 'Nouveau message', options)
   );
 });
 
-// Notification click event
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
@@ -54,17 +60,15 @@ self.addEventListener('notificationclick', (event) => {
   const urlToOpen = event.notification.data?.url || '/espace-client?tab=messages';
 
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Check if there's already a window open
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.navigate(urlToOpen);
           return client.focus();
         }
       }
-      // If no window is open, open a new one
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(urlToOpen);
       }
     })
   );
