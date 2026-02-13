@@ -15,6 +15,7 @@ import { AdminDocuments } from "@/components/admin/AdminDocuments";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import logo from "@/assets/logo.png";
 
 export default function AdminDashboard() {
@@ -48,6 +49,7 @@ export default function AdminDashboard() {
                   Accueil
                 </Button>
               </Link>
+              <ThemeToggle />
               <NotificationCenter onNavigate={setActiveTab} />
               <span className="text-sm text-muted-foreground">
                 Anaïs Dubois
