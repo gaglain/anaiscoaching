@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Settings, CreditCard, Eye, EyeOff, Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { NotificationToggle } from "@/components/NotificationToggle";
 
 export function AdminSettings() {
   const [stripeKey, setStripeKey] = useState("");
@@ -32,6 +33,7 @@ export function AdminSettings() {
 
   return (
     <div className="space-y-6">
+      <NotificationToggle />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

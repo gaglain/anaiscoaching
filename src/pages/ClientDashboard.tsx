@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MessageSquare, Home, LogOut, Menu, X, BarChart3, FileText } from "lucide-react";
+import { Calendar, MessageSquare, Home, LogOut, Menu, X, BarChart3, FileText, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ClientOverview } from "@/components/client/ClientOverview";
 import { ClientBookings } from "@/components/client/ClientBookings";
@@ -10,6 +10,7 @@ import { ClientMessages } from "@/components/client/ClientMessages";
 import { ClientStats } from "@/components/client/ClientStats";
 import { ClientDocuments } from "@/components/client/ClientDocuments";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { NotificationToggle } from "@/components/NotificationToggle";
 import logo from "@/assets/logo.png";
 
 export default function ClientDashboard() {
@@ -112,7 +113,7 @@ export default function ClientDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid bg-muted/50 p-1">
             <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Accueil</span>
@@ -138,6 +139,10 @@ export default function ClientDashboard() {
                 </span>
               )}
             </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Paramètres</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -158,6 +163,10 @@ export default function ClientDashboard() {
 
           <TabsContent value="messages">
             <ClientMessages />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <NotificationToggle />
           </TabsContent>
         </Tabs>
       </main>
