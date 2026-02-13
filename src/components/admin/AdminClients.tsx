@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp } from "lucide-react";
+import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -36,6 +36,8 @@ export function AdminClients() {
   const [editLevel, setEditLevel] = useState<string>("");
   const [editGoals, setEditGoals] = useState<string>("");
   const [editPhone, setEditPhone] = useState<string>("");
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState("");
 
   useEffect(() => {
     fetchClients();
@@ -94,6 +96,8 @@ export function AdminClients() {
     setEditLevel(client.level || "beginner");
     setEditGoals(client.goals || "");
     setEditPhone(client.phone || "");
+    setEditTags((client as any).tags || []);
+    setNewTag("");
     setIsDialogOpen(true);
   };
 
@@ -108,7 +112,8 @@ export function AdminClients() {
           level: editLevel,
           goals: editGoals,
           phone: editPhone,
-        })
+          tags: editTags,
+        } as any)
         .eq("id", selectedClient.id);
 
       if (error) throw error;
@@ -249,6 +254,16 @@ export function AdminClients() {
                     <span className="text-foreground truncate">{client.goals}</span>
                   </p>
                 )}
+                {(client as any).tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {(client as any).tags.map((tag: string) => (
+                      <Badge key={tag} variant="outline" className="text-xs border-secondary/30 text-secondary">
+                        <Tag className="h-2.5 w-2.5 mr-1" />
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
                 <div className="flex items-center gap-4 pt-3 border-t border-border/50">
                   <div className="flex items-center gap-1.5 text-sm">
                     <div className="p-1 rounded bg-primary/10">
@@ -341,6 +356,56 @@ export function AdminClients() {
                   placeholder="Objectifs du client, notes de suivi..."
                   className="min-h-[100px]"
                 />
+              </div>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <Label>Tags</Label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {editTags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="gap-1 pr-1">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => setEditTags(editTags.filter((t) => t !== tag))}
+                        className="ml-0.5 rounded-full hover:bg-destructive/20 p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    placeholder="Ajouter un tag..."
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const trimmed = newTag.trim();
+                        if (trimmed && !editTags.includes(trimmed)) {
+                          setEditTags([...editTags, trimmed]);
+                          setNewTag("");
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      const trimmed = newTag.trim();
+                      if (trimmed && !editTags.includes(trimmed)) {
+                        setEditTags([...editTags, trimmed]);
+                        setNewTag("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
