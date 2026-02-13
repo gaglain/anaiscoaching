@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Check, X, Loader2, Download, FileSpreadsheet } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Calendar, Check, X, Loader2, Download, FileSpreadsheet, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -21,10 +25,27 @@ export function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+
+  // Manual booking dialog
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createClientId, setCreateClientId] = useState("");
+  const [createDate, setCreateDate] = useState("");
+  const [createTime, setCreateTime] = useState("10:00");
+  const [createType, setCreateType] = useState("individual");
+  const [createGoals, setCreateGoals] = useState("");
+  const [createStatus, setCreateStatus] = useState<"pending" | "confirmed">("confirmed");
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetchBookings();
+    fetchClients();
   }, []);
+
+  const fetchClients = async () => {
+    const { data } = await supabase.from("profiles").select("id, name").order("name");
+    setClients(data || []);
+  };
 
   const fetchBookings = async () => {
     try {
@@ -199,6 +220,31 @@ END:VCALENDAR`;
     });
   };
 
+  const handleCreateBooking = async () => {
+    if (!createClientId || !createDate || !createTime) return;
+    setIsCreating(true);
+    try {
+      const sessionDate = new Date(`${createDate}T${createTime}:00`);
+      const { error } = await supabase.from("bookings").insert({
+        client_id: createClientId,
+        session_date: sessionDate.toISOString(),
+        session_type: createType,
+        goals: createGoals || null,
+        status: createStatus,
+      });
+      if (error) throw error;
+
+      toast({ title: "Réservation créée", description: "La séance a été ajoutée avec succès." });
+      setIsCreateOpen(false);
+      setCreateClientId(""); setCreateDate(""); setCreateTime("10:00"); setCreateType("individual"); setCreateGoals(""); setCreateStatus("confirmed");
+      fetchBookings();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter */}
@@ -226,6 +272,10 @@ END:VCALENDAR`;
           >
             <FileSpreadsheet className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Exporter</span>
+          </Button>
+          <Button onClick={() => setIsCreateOpen(true)} className="shrink-0">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Nouvelle séance</span>
           </Button>
         </div>
       </div>
@@ -366,6 +416,72 @@ END:VCALENDAR`;
           </CardContent>
         </Card>
       )}
+
+      {/* Create Booking Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-secondary" />
+              Nouvelle réservation
+            </DialogTitle>
+            <DialogDescription>Créez manuellement une séance et attribuez-la à un client.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Client</Label>
+              <Select value={createClientId} onValueChange={setCreateClientId}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner un client" /></SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input type="date" value={createDate} onChange={(e) => setCreateDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Heure</Label>
+                <Input type="time" value={createTime} onChange={(e) => setCreateTime(e.target.value)} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Type de séance</Label>
+              <Select value={createType} onValueChange={setCreateType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Séance individuelle</SelectItem>
+                  <SelectItem value="duo">Séance duo</SelectItem>
+                  <SelectItem value="group">Séance en groupe</SelectItem>
+                  <SelectItem value="outdoor">Séance en extérieur</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Statut</Label>
+              <Select value={createStatus} onValueChange={(v) => setCreateStatus(v as "pending" | "confirmed")}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="confirmed">Confirmée</SelectItem>
+                  <SelectItem value="pending">En attente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Objectif (optionnel)</Label>
+              <Textarea value={createGoals} onChange={(e) => setCreateGoals(e.target.value)} placeholder="Objectif de la séance..." className="min-h-[60px]" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleCreateBooking} disabled={!createClientId || !createDate || isCreating} className="w-full">
+              {isCreating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+              Créer la réservation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
