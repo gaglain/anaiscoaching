@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document" | "account_created";
+  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document" | "account_created" | "booking_rescheduled";
   to: string;
   data: {
     clientName?: string;
@@ -213,6 +213,29 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
               À très vite,<br>
               <strong>Anaïs Dubois</strong><br>
               Coach sportif à Rennes
+            </p>
+          </div>
+        `,
+      };
+
+    case "booking_rescheduled":
+      return {
+        subject: "Séance reprogrammée 🔄",
+        html: `
+          <div style="${baseStyle}">
+            <h1 style="color: #f05a28;">Séance reprogrammée</h1>
+            <p>Bonjour ${data.clientName},</p>
+            <p>Votre séance a été reprogrammée au :</p>
+            <div style="background: #fff3e0; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #ff9800;">
+              <p><strong>📅 Nouvelle date :</strong> ${data.sessionDate}</p>
+              <p><strong>⏰ Nouvelle heure :</strong> ${data.sessionTime}</p>
+              <p><strong>🏋️ Type :</strong> ${data.sessionType}</p>
+            </div>
+            <p>Cette nouvelle séance est en attente de confirmation par Anaïs.</p>
+            <p style="margin-top: 24px;">
+              <a href="https://anaiscoaching.lovable.app/espace-client" style="${buttonStyle}">
+                Voir mes réservations
+              </a>
             </p>
           </div>
         `,

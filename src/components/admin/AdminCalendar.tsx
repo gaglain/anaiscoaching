@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, setHours, setMinutes } from "date-fns";
 import { fr } from "date-fns/locale";
 import { sendEmail, getSessionTypeLabel } from "@/lib/emails";
+import { syncBookingToCalendar } from "@/lib/calendarSync";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings"> & {
@@ -136,6 +137,7 @@ export function AdminCalendar() {
       });
 
       fetchBookings();
+      syncBookingToCalendar();
       setIsDialogOpen(false);
     } catch (error: any) {
       toast({
@@ -243,6 +245,7 @@ END:VCALENDAR`;
       });
 
       fetchBookings();
+      syncBookingToCalendar();
       setIsQuickBookOpen(false);
     } catch (error: any) {
       toast({

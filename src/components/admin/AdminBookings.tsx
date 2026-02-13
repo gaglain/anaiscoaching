@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { sendEmail, getSessionTypeLabel } from "@/lib/emails";
 import { exportBookingsToCSV, type ExportBooking } from "@/lib/exportCsv";
+import { syncBookingToCalendar } from "@/lib/calendarSync";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings"> & {
@@ -120,6 +121,7 @@ export function AdminBookings() {
       });
 
       fetchBookings();
+      syncBookingToCalendar();
     } catch (error: any) {
       toast({
         title: "Erreur",
@@ -238,6 +240,7 @@ END:VCALENDAR`;
       setIsCreateOpen(false);
       setCreateClientId(""); setCreateDate(""); setCreateTime("10:00"); setCreateType("individual"); setCreateGoals(""); setCreateStatus("confirmed");
       fetchBookings();
+      syncBookingToCalendar();
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } finally {

@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 interface SendEmailParams {
-  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome";
+  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "booking_rescheduled";
   to: string;
   data: {
     clientName?: string;
