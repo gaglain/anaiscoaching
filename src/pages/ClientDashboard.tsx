@@ -12,6 +12,7 @@ import { ClientDocuments } from "@/components/client/ClientDocuments";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { NotificationToggle } from "@/components/NotificationToggle";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import logo from "@/assets/logo.png";
 
 export default function ClientDashboard() {
@@ -36,6 +37,7 @@ export default function ClientDashboard() {
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-4">
+              <ThemeToggle />
               <NotificationCenter onNavigate={setActiveTab} />
               <span className="text-sm text-muted-foreground">
                 Bonjour, <span className="font-semibold text-foreground">{user?.user_metadata?.name || user?.email?.split('@')[0]}</span>
