@@ -11,6 +11,7 @@ import { ClientStats } from "@/components/client/ClientStats";
 import { ClientDocuments } from "@/components/client/ClientDocuments";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { NotificationToggle } from "@/components/NotificationToggle";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import logo from "@/assets/logo.png";
 
 export default function ClientDashboard() {
@@ -35,20 +36,7 @@ export default function ClientDashboard() {
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveTab("messages")}
-                className="relative"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Messages
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </Button>
+              <NotificationCenter onNavigate={setActiveTab} />
               <span className="text-sm text-muted-foreground">
                 Bonjour, <span className="font-semibold text-foreground">{user?.user_metadata?.name || user?.email?.split('@')[0]}</span>
               </span>
