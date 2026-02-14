@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus } from "lucide-react";
+import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
@@ -34,6 +34,10 @@ export function AdminClients() {
   const [selectedClient, setSelectedClient] = useState<ClientWithStats | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Delete dialog
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; client: ClientWithStats | null }>({ open: false, client: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Edit fields
   const [editLevel, setEditLevel] = useState<string>("");
@@ -136,6 +140,30 @@ export function AdminClients() {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteClient = async () => {
+    const target = deleteDialog.client;
+    if (!target) return;
+    setIsDeleting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "delete", user_id: target.id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ title: "Client supprimé", description: `${target.name} a été supprimé.` });
+      setDeleteDialog({ open: false, client: null });
+      setIsDialogOpen(false);
+      fetchClients();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -441,14 +469,41 @@ export function AdminClients() {
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="flex-row justify-between sm:justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setDeleteDialog({ open: true, client: selectedClient }); }}
+              className="border-destructive/30 text-destructive hover:bg-destructive/5"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Supprimer
+            </Button>
             <Button
               onClick={saveClientDetails}
               disabled={isUpdating}
-              className="w-full sm:w-auto"
             >
               <Edit2 className="h-4 w-4 mr-2" />
               Sauvegarder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete client dialog */}
+      <Dialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer le client</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer <strong>{deleteDialog.client?.name}</strong> ? Cette action est irréversible. Toutes ses données (réservations, messages, documents) seront supprimées.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, client: null })}>Annuler</Button>
+            <Button variant="destructive" onClick={handleDeleteClient} disabled={isDeleting}>
+              {isDeleting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Supprimer définitivement
             </Button>
           </DialogFooter>
         </DialogContent>
