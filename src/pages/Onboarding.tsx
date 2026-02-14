@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { sendEmail } from "@/lib/emails";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -149,6 +150,14 @@ export default function Onboarding() {
         .eq("id", user.id);
 
       if (error) throw error;
+
+      // Send welcome email
+      const clientName = user.user_metadata?.name || user.email?.split("@")[0] || "Client";
+      sendEmail({
+        type: "welcome",
+        to: user.email || "",
+        data: { clientName },
+      });
 
       toast({
         title: "Bienvenue ! 🎉",
