@@ -18,7 +18,7 @@ import { syncBookingToCalendar } from "@/lib/calendarSync";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings"> & {
-  profiles?: { name: string; phone: string | null; email: string | null } | null;
+  profiles?: { name: string; phone: string | null; email: string | null; onboarding_data: any | null; goals: string | null; level: string | null } | null;
 };
 
 export function AdminBookings() {
@@ -52,7 +52,7 @@ export function AdminBookings() {
     try {
       const { data, error } = await supabase
         .from("bookings")
-        .select("*, profiles(name, phone, email)")
+        .select("*, profiles(name, phone, email, onboarding_data, goals, level)")
         .order("session_date", { ascending: true });
 
       if (error) throw error;
@@ -328,6 +328,25 @@ END:VCALENDAR`;
                       {booking.session_type === "individual" ? "Séance individuelle" : booking.session_type === "duo" ? "Séance duo" : booking.session_type === "group" ? "Séance en groupe" : "Séance en extérieur"}
                       {booking.goals && ` • ${booking.goals}`}
                     </p>
+                    {booking.profiles?.goals && (
+                      <p className="text-sm text-primary font-medium">
+                        🎯 Objectifs : {booking.profiles.goals}
+                      </p>
+                    )}
+                    {booking.profiles?.level && (
+                      <p className="text-sm text-muted-foreground">
+                        📊 Niveau : {booking.profiles.level === "beginner" ? "Débutant" : booking.profiles.level === "intermediate" ? "Intermédiaire" : "Avancé"}
+                      </p>
+                    )}
+                    {booking.profiles?.onboarding_data?.frequency && (
+                      <p className="text-sm text-muted-foreground">
+                        ⏱ Fréquence souhaitée : {
+                          booking.profiles.onboarding_data.frequency === "1_semaine" ? "1x/sem" :
+                          booking.profiles.onboarding_data.frequency === "2_semaine" ? "2x/sem" :
+                          booking.profiles.onboarding_data.frequency === "3_plus" ? "3+/sem" : "Non défini"
+                        }
+                      </p>
+                    )}
                     {booking.notes && (
                       <p className="text-sm text-muted-foreground italic">
                         "{booking.notes}"
