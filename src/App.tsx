@@ -13,6 +13,7 @@ import Index from "./pages/Index";
 // Lazy-loaded pages
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
@@ -42,6 +43,14 @@ const App = () => (
               <Route path="/connexion" element={<Login />} />
               <Route path="/login" element={<Login />} />
               <Route path="/inscription" element={<Signup />} />
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute>
+                    <Onboarding />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/mot-de-passe-oublie" element={<ResetPassword />} />
               <Route path="/nouveau-mot-de-passe" element={<UpdatePassword />} />
               <Route

@@ -215,6 +215,8 @@ export type Database = {
           id: string
           level: string | null
           name: string
+          onboarding_completed: boolean
+          onboarding_data: Json | null
           phone: string | null
           tags: string[] | null
           updated_at: string
@@ -226,6 +228,8 @@ export type Database = {
           id: string
           level?: string | null
           name: string
+          onboarding_completed?: boolean
+          onboarding_data?: Json | null
           phone?: string | null
           tags?: string[] | null
           updated_at?: string
@@ -237,6 +241,8 @@ export type Database = {
           id?: string
           level?: string | null
           name?: string
+          onboarding_completed?: boolean
+          onboarding_data?: Json | null
           phone?: string | null
           tags?: string[] | null
           updated_at?: string

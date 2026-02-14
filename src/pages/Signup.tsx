@@ -53,9 +53,9 @@ export default function Signup() {
     } else {
       toast({
         title: "Inscription réussie !",
-        description: "Bienvenue ! Votre compte a été créé.",
+        description: "Bienvenue ! Complétez votre profil en quelques questions.",
       });
-      navigate("/espace-client");
+      navigate("/onboarding");
     }
   };
 
