@@ -7,7 +7,8 @@ const corsHeaders = {
 };
 
 interface PushPayload {
-  userId: string;
+  userId?: string;
+  type?: string;
   title: string;
   body: string;
   url?: string;
@@ -36,20 +37,40 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { userId, title, body, url } = await req.json() as PushPayload;
+    const { userId, type, title, body, url } = await req.json() as PushPayload;
 
-    if (!userId || !title || !body) {
+    if (!title || !body) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get user's push subscriptions
+    let targetUserIds: string[] = [];
+
+    if (type === 'new_signup' || type === 'new_booking_admin') {
+      // Send to all admins
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+      targetUserIds = (adminRoles || []).map((r: any) => r.user_id);
+    } else if (userId) {
+      targetUserIds = [userId];
+    }
+
+    if (targetUserIds.length === 0) {
+      return new Response(
+        JSON.stringify({ message: 'No target users found' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get push subscriptions for all target users
     const { data: subscriptions, error: subError } = await supabase
       .from('push_subscriptions')
       .select('*')
-      .eq('user_id', userId);
+      .in('user_id', targetUserIds);
 
     if (subError) {
       console.error('Error fetching subscriptions:', subError);
