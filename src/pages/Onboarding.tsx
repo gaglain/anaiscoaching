@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { sendEmail } from "@/lib/emails";
+import { sendEmail, notifyAdmin } from "@/lib/emails";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -158,6 +158,30 @@ export default function Onboarding() {
         to: user.email || "",
         data: { clientName },
       });
+
+      // Notify admin of new signup (email + push)
+      notifyAdmin({
+        type: "new_signup",
+        data: {
+          clientName,
+          clientEmail: user.email || "",
+          level: goalsStr ? undefined : undefined,
+          motivations: goalsStr || undefined,
+        },
+      });
+
+      // Send push notification to admins
+      try {
+        await supabase.functions.invoke("send-push", {
+          body: {
+            type: "new_signup",
+            title: "Nouveau client inscrit 🆕",
+            body: `${clientName} vient de s'inscrire sur l'application.`,
+          },
+        });
+      } catch (e) {
+        console.error("Push notification error:", e);
+      }
 
       toast({
         title: "Bienvenue ! 🎉",

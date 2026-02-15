@@ -14,7 +14,7 @@ interface SendEmailParams {
 }
 
 interface NotifyAdminParams {
-  type: "new_booking" | "new_message";
+  type: "new_booking" | "new_message" | "new_signup";
   data: {
     clientName: string;
     clientEmail?: string;
@@ -23,6 +23,8 @@ interface NotifyAdminParams {
     sessionType?: string;
     goals?: string;
     messagePreview?: string;
+    level?: string;
+    motivations?: string;
   };
 }
 

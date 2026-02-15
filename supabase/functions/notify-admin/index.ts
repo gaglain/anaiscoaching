@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface NotifyRequest {
-  type: "new_booking" | "new_message";
+  type: "new_booking" | "new_message" | "new_signup";
   data: {
     clientName: string;
     clientEmail?: string;
@@ -20,6 +20,8 @@ interface NotifyRequest {
     sessionType?: string;
     goals?: string;
     messagePreview?: string;
+    level?: string;
+    motivations?: string;
   };
 }
 
@@ -77,6 +79,27 @@ const getNotificationContent = (type: NotifyRequest["type"], data: NotifyRequest
             <p style="margin-top: 24px;">
               <a href="https://coachsportif-rennes.fr/admin" style="${buttonStyle}">
                 Répondre
+              </a>
+            </p>
+          </div>
+        `,
+      };
+
+    case "new_signup":
+      return {
+        subject: `🆕 Nouveau client inscrit : ${data.clientName}`,
+        html: `
+          <div style="${baseStyle}">
+            <h1 style="color: #f05a28;">Nouveau client inscrit !</h1>
+            <p><strong>${data.clientName}</strong> vient de s'inscrire sur l'application.</p>
+            <div style="background: #e8f5e9; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #4caf50;">
+              <p><strong>📧 Email :</strong> ${data.clientEmail}</p>
+              ${data.level ? `<p><strong>📊 Niveau :</strong> ${data.level}</p>` : ''}
+              ${data.motivations ? `<p><strong>🎯 Objectifs :</strong> ${data.motivations}</p>` : ''}
+            </div>
+            <p style="margin-top: 24px;">
+              <a href="https://coachsportif-rennes.fr/admin" style="${buttonStyle}">
+                Voir dans le back-office
               </a>
             </p>
           </div>
