@@ -261,7 +261,7 @@ export function BookingSection() {
                   ].map((feature) => (
                     <div key={feature} className="flex items-center gap-3 text-left">
                       <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="text-secondary-foreground/80 text-sm">{feature}</span>
+                      <span className="text-muted-foreground text-sm">{feature}</span>
                     </div>
                   ))}
                 </div>
