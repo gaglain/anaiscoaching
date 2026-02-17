@@ -11,8 +11,8 @@ const corsHeaders = {
 };
 
 interface NotifyRequest {
-  type: "new_booking" | "new_message" | "new_signup";
-  data: {
+  type: "new_booking" | "new_message" | "new_signup" | "contact_form";
+  data?: {
     clientName: string;
     clientEmail?: string;
     sessionDate?: string;
@@ -23,6 +23,13 @@ interface NotifyRequest {
     level?: string;
     motivations?: string;
   };
+  // contact_form fields (flat)
+  name?: string;
+  email?: string;
+  phone?: string;
+  sessionType?: string;
+  goal?: string;
+  message?: string;
 }
 
 const getNotificationContent = (type: NotifyRequest["type"], data: NotifyRequest["data"]) => {
@@ -111,14 +118,56 @@ const getNotificationContent = (type: NotifyRequest["type"], data: NotifyRequest
   }
 };
 
+const getContactFormContent = (body: NotifyRequest) => {
+  const baseStyle = `
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+  `;
+  return {
+    subject: `📩 Nouvelle demande de contact de ${body.name}`,
+    html: `
+      <div style="${baseStyle}">
+        <h1 style="color: #f05a28;">Nouvelle demande via le site</h1>
+        <p><strong>${body.name}</strong> souhaite te contacter.</p>
+        <div style="background: #fff3e0; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f05a28;">
+          <p><strong>📧 Email :</strong> ${body.email}</p>
+          ${body.phone ? `<p><strong>📞 Téléphone :</strong> ${body.phone}</p>` : ''}
+          ${body.sessionType ? `<p><strong>🏋️ Type de séance :</strong> ${body.sessionType}</p>` : ''}
+          ${body.goal ? `<p><strong>🎯 Objectif :</strong> ${body.goal}</p>` : ''}
+          ${body.message ? `<p><strong>💬 Message :</strong> ${body.message}</p>` : ''}
+        </div>
+        <p style="margin-top: 24px;">
+          <a href="mailto:${body.email}" style="display: inline-block; background-color: #f05a28; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Répondre par email
+          </a>
+        </p>
+      </div>
+    `,
+  };
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { type, data }: NotifyRequest = await req.json();
-    const { subject, html } = getNotificationContent(type, data);
+    const body: NotifyRequest = await req.json();
+    const { type } = body;
+    
+    let subject: string;
+    let html: string;
+    
+    if (type === "contact_form") {
+      const content = getContactFormContent(body);
+      subject = content.subject;
+      html = content.html;
+    } else {
+      const content = getNotificationContent(type, body.data!);
+      subject = content.subject;
+      html = content.html;
+    }
 
     const emailResponse = await resend.emails.send({
       from: "App Coach Anaïs <noreply@coachsportif-rennes.fr>",

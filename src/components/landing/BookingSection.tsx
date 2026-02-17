@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, MessageSquare, User, CheckCircle } from "lucide-react";
+import { Calendar, MessageSquare, User, CheckCircle, ArrowRight, Send, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,13 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const steps = [
   {
     icon: User,
-    title: "1. Remplis le formulaire",
-    description: "Indique ton objectif, tes disponibilités et ton niveau actuel.",
+    title: "1. Contacte Anaïs",
+    description: "Remplis le formulaire ou crée ton compte pour accéder à ton espace personnel.",
   },
   {
     icon: MessageSquare,
@@ -37,22 +39,45 @@ export function BookingSection() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // For now, redirect to login/signup since booking requires authentication
-    toast({
-      title: "Créez votre compte",
-      description:
-        "Pour réserver une séance, vous devez d'abord créer votre compte client.",
-    });
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("contact-name") as string;
+    const email = formData.get("contact-email") as string;
+    const phone = formData.get("contact-phone") as string;
+    const sessionType = formData.get("contact-session-type") as string;
+    const goal = formData.get("contact-goal") as string;
+    const message = formData.get("contact-message") as string;
 
-    setTimeout(() => {
-      navigate("/signup");
-    }, 1500);
+    try {
+      await supabase.functions.invoke("notify-admin", {
+        body: {
+          type: "contact_form",
+          name,
+          email,
+          phone,
+          sessionType,
+          goal,
+          message,
+        },
+      });
 
-    setIsSubmitting(false);
+      toast({
+        title: "Demande envoyée ✅",
+        description: "Anaïs te recontactera très rapidement !",
+      });
+      (e.target as HTMLFormElement).reset();
+    } catch {
+      toast({
+        title: "Erreur",
+        description: "Un problème est survenu. Réessaie ou contacte Anaïs directement.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -65,9 +90,8 @@ export function BookingSection() {
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Réserver une séance avec Anaïs, coach sportif à Rennes, est très
-            simple : tu remplis le formulaire en ligne en indiquant ton objectif,
-            tes disponibilités et ton niveau actuel. Anaïs te recontacte ensuite
-            pour confirmer le créneau et te proposer un premier échange personnalisé.
+            simple : envoie ta demande via le formulaire ou crée directement
+            ton compte pour accéder à ton espace personnel.
           </p>
         </div>
 
@@ -90,106 +114,179 @@ export function BookingSection() {
           ))}
         </div>
 
-        {/* Booking form */}
+        {/* Tabs: Contact form OR Create account */}
         <div className="max-w-2xl mx-auto">
-          <div className="bg-card rounded-2xl p-8 shadow-lg border border-border">
-            <h3 className="font-heading font-semibold text-2xl text-secondary mb-6 text-center">
-              Demande de séance
-            </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Prénom et nom *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Ton nom complet"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="ton@email.com"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="06 XX XX XX XX"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="session-type">Type de séance *</Label>
-                  <Select required>
-                    <SelectTrigger id="session-type">
-                      <SelectValue placeholder="Choisis un type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="individual">Individuel</SelectItem>
-                      <SelectItem value="duo">En duo</SelectItem>
-                      <SelectItem value="group">Petit groupe</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="goal">Ton objectif *</Label>
-                <Select required>
-                  <SelectTrigger id="goal">
-                    <SelectValue placeholder="Choisis ton objectif principal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="weight-loss">Perte de poids</SelectItem>
-                    <SelectItem value="fitness">Remise en forme</SelectItem>
-                    <SelectItem value="strength">Renforcement musculaire</SelectItem>
-                    <SelectItem value="preparation">Préparation physique</SelectItem>
-                    <SelectItem value="restart">Reprise après arrêt</SelectItem>
-                    <SelectItem value="other">Autre</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message">Message (optionnel)</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Dis-moi en plus sur tes objectifs, tes contraintes ou tes disponibilités..."
-                  rows={4}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full gradient-primary shadow-primary text-lg font-semibold"
-                disabled={isSubmitting}
+          <Tabs defaultValue="contact" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 h-14 mb-8 bg-card border border-border rounded-xl p-1">
+              <TabsTrigger
+                value="contact"
+                className="flex items-center gap-2 text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md h-full transition-all"
               >
-                {isSubmitting ? "Envoi en cours..." : "Envoyer ma demande"}
-              </Button>
+                <Send className="h-4 w-4" />
+                Envoyer une demande
+              </TabsTrigger>
+              <TabsTrigger
+                value="signup"
+                className="flex items-center gap-2 text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md h-full transition-all"
+              >
+                <UserPlus className="h-4 w-4" />
+                Créer mon compte
+              </TabsTrigger>
+            </TabsList>
 
-              <p className="text-center text-sm text-muted-foreground">
-                En soumettant ce formulaire, tu acceptes d'être recontacté par
-                Anaïs pour discuter de ta demande.
-              </p>
-            </form>
-          </div>
+            {/* Contact form tab */}
+            <TabsContent value="contact">
+              <div className="bg-card rounded-2xl p-8 shadow-lg border border-border">
+                <h3 className="font-heading font-semibold text-xl text-secondary mb-2 text-center">
+                  Envoie ta demande
+                </h3>
+                <p className="text-muted-foreground text-sm text-center mb-6">
+                  Anaïs recevra ton message par email et te recontactera rapidement.
+                </p>
+
+                <form onSubmit={handleContactSubmit} className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-name">Prénom et nom *</Label>
+                      <Input
+                        id="contact-name"
+                        name="contact-name"
+                        placeholder="Ton nom complet"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-email">Email *</Label>
+                      <Input
+                        id="contact-email"
+                        name="contact-email"
+                        type="email"
+                        placeholder="ton@email.com"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-phone">Téléphone</Label>
+                      <Input
+                        id="contact-phone"
+                        name="contact-phone"
+                        type="tel"
+                        placeholder="06 XX XX XX XX"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-session-type">Type de séance</Label>
+                      <select
+                        id="contact-session-type"
+                        name="contact-session-type"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">Choisis un type</option>
+                        <option value="individual">Individuel</option>
+                        <option value="duo">En duo</option>
+                        <option value="group">Petit groupe</option>
+                        <option value="remote">À distance</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-goal">Ton objectif</Label>
+                    <select
+                      id="contact-goal"
+                      name="contact-goal"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      <option value="">Choisis ton objectif principal</option>
+                      <option value="weight-loss">Perte de poids</option>
+                      <option value="fitness">Remise en forme</option>
+                      <option value="strength">Renforcement musculaire</option>
+                      <option value="preparation">Préparation physique</option>
+                      <option value="restart">Reprise après arrêt</option>
+                      <option value="remote-program">Programme à distance</option>
+                      <option value="other">Autre</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="contact-message">Message (optionnel)</Label>
+                    <Textarea
+                      id="contact-message"
+                      name="contact-message"
+                      placeholder="Dis-moi en plus sur tes objectifs, tes contraintes ou tes disponibilités..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full gradient-primary shadow-primary text-lg font-semibold"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Envoi en cours..." : "Envoyer ma demande"}
+                  </Button>
+
+                  <p className="text-center text-xs text-muted-foreground">
+                    En soumettant ce formulaire, tu acceptes d'être recontacté(e) par Anaïs.
+                  </p>
+                </form>
+              </div>
+            </TabsContent>
+
+            {/* Signup tab */}
+            <TabsContent value="signup">
+              <div className="bg-card rounded-2xl p-8 shadow-lg border border-border text-center">
+                <div className="w-16 h-16 mx-auto rounded-full gradient-primary flex items-center justify-center mb-6">
+                  <UserPlus className="h-8 w-8 text-primary-foreground" />
+                </div>
+                <h3 className="font-heading font-semibold text-xl text-secondary mb-3">
+                  Crée ton compte client
+                </h3>
+                <p className="text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
+                  En créant ton compte, tu accèdes à ton espace personnel pour
+                  réserver tes séances, échanger directement avec Anaïs et
+                  suivre ta progression.
+                </p>
+
+                <div className="space-y-4 max-w-sm mx-auto mb-8">
+                  {[
+                    "Réservation de séances en ligne",
+                    "Messagerie directe avec Anaïs",
+                    "Suivi de tes progrès et historique",
+                    "Documents et programmes partagés",
+                  ].map((feature) => (
+                    <div key={feature} className="flex items-center gap-3 text-left">
+                      <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="text-secondary-foreground/80 text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Button
+                  size="lg"
+                  className="gradient-primary shadow-primary text-lg font-semibold px-8 group"
+                  onClick={() => navigate("/inscription")}
+                >
+                  Créer mon compte gratuitement
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+
+                <p className="text-xs text-muted-foreground mt-4">
+                  Inscription gratuite • Aucun engagement
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Additional SEO text */}
-          <p className="text-center text-muted-foreground mt-8 max-w-xl mx-auto">
+          <p className="text-center text-muted-foreground mt-8 max-w-xl mx-auto text-sm">
             Une fois ton compte créé, tu peux retrouver tes prochaines séances,
             ton historique et tes échanges avec Anaïs directement dans ton espace
-            en ligne. L'objectif est de te faire gagner du temps, tout en te
-            permettant de garder un lien direct avec ta coach.
+            en ligne.
           </p>
         </div>
       </div>
