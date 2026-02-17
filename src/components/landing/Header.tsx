@@ -16,6 +16,7 @@ export function Header() {
   const navLinks = [
     { href: "#pourquoi", label: "Pourquoi un coach ?" },
     { href: "#services", label: "Services" },
+    { href: "#coaching-distance", label: "À distance" },
     { href: "#coach", label: "Qui suis-je ?" },
     { href: "#reservation", label: "Réservation" },
     { href: "#faq", label: "FAQ" },

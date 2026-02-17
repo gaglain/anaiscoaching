@@ -6,13 +6,13 @@ import anaisCoaching from "@/assets/anais-coaching.webp";
 const credentials = [
   {
     icon: GraduationCap,
-    title: "Diplôme d'État",
-    description: "BPJEPS Activités de la Forme",
+    title: "Master 2 APAS 2SER",
+    description: "Activité Physique Adaptée & Santé",
   },
   {
     icon: Award,
-    title: "Certifications",
-    description: "Formation continue en coaching",
+    title: "DU Préparation Physique",
+    description: "Diplôme Universitaire EPP",
   },
   {
     icon: Shield,
