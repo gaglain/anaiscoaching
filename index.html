@@ -51,7 +51,7 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- JSON-LD Structured Data -->
+    <!-- JSON-LD Structured Data: LocalBusiness -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -109,6 +109,72 @@
           }
         ]
       }
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Combien de temps dure une séance avec un coach sportif à Rennes ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Les séances durent en général entre 45 minutes et 1 heure, selon ton niveau et l'objectif de la séance."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Où se déroulent les séances de coaching à Rennes ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Les séances peuvent avoir lieu à domicile, en extérieur dans Rennes et ses environs, ou dans un lieu défini avec Anaïs en fonction de tes préférences."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Faut-il avoir un niveau sportif pour commencer ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Absolument pas ! Anaïs accompagne aussi bien les débutants que les sportifs confirmés. Chaque programme est adapté à ton niveau actuel."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment se passe la première séance ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "La première séance est un moment d'échange pour faire connaissance, comprendre tes objectifs et évaluer ton niveau."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quels sont les tarifs du coaching sportif à Rennes ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Les tarifs varient selon le format choisi (individuel, duo, petit groupe) et la fréquence des séances. Contacte Anaïs pour une proposition adaptée."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment annuler ou reporter une séance ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tu peux annuler ou reporter une séance directement depuis ton espace client en ligne."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Est-ce que tu proposes des séances en visio ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Pour l'instant, Anaïs privilégie les séances en présentiel pour garantir un accompagnement optimal et corriger ta posture en temps réel."
+          }
+        }
+      ]
     }
     </script>
   </body>
