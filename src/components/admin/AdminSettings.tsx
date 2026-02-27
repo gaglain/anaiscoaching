@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { NotificationToggle } from "@/components/NotificationToggle";
 import { useCategories } from "@/hooks/useCategories";
 import { CalendarSyncSettings } from "@/components/admin/CalendarSyncSettings";
+import { GooglePlacesSettings } from "@/components/admin/GooglePlacesSettings";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,6 +92,9 @@ export function AdminSettings() {
 
       {/* Calendar Sync */}
       <CalendarSyncSettings />
+
+      {/* Google Places / Avis */}
+      <GooglePlacesSettings />
 
       {/* Password */}
       <Card>
