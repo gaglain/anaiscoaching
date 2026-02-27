@@ -254,7 +254,7 @@ export function BookingSection() {
 
                 <div className="space-y-4 max-w-sm mx-auto mb-8">
                   {[
-                    "Réservation de séances en ligne",
+                    "Suivi de tes séances planifiées",
                     "Messagerie directe avec Anaïs",
                     "Suivi de tes progrès et historique",
                     "Documents et programmes partagés",

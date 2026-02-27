@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, Plus, Loader2, CalendarClock, History } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar, Loader2, CalendarClock, History, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { sendEmail, notifyAdmin, getSessionTypeLabel } from "@/lib/emails";
+import { notifyAdmin, getSessionTypeLabel } from "@/lib/emails";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Booking = Tables<"bookings">;
@@ -23,22 +21,12 @@ export function ClientBookings() {
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [showAllHistory, setShowAllHistory] = useState(false);
   
   // Reschedule state
   const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleTime, setRescheduleTime] = useState("");
   const [isRescheduling, setIsRescheduling] = useState(false);
-
-  // Form state
-  const [sessionDate, setSessionDate] = useState("");
-  const [sessionTime, setSessionTime] = useState("");
-  const [sessionType, setSessionType] = useState("individual");
-  const [goals, setGoals] = useState("");
-  const [notes, setNotes] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -60,59 +48,6 @@ export function ClientBookings() {
       console.error("Error fetching bookings:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    setIsSubmitting(true);
-
-    try {
-      const sessionDateTime = new Date(`${sessionDate}T${sessionTime}`);
-      const { error } = await supabase.from("bookings").insert({
-        client_id: user.id,
-        session_date: sessionDateTime.toISOString(),
-        session_type: sessionType,
-        goals: goals || null,
-        notes: notes || null,
-        status: "pending",
-      });
-      if (error) throw error;
-
-      const { data: profile } = await supabase.from("profiles").select("name").eq("id", user.id).single();
-      const clientName = profile?.name || "Client";
-      const formattedDate = format(sessionDateTime, "EEEE d MMMM yyyy", { locale: fr });
-      const formattedTime = format(sessionDateTime, "HH:mm", { locale: fr });
-
-      sendEmail({
-        type: "booking_confirmation",
-        to: user.email || "",
-        data: { clientName, sessionDate: formattedDate, sessionTime: formattedTime, sessionType: getSessionTypeLabel(sessionType) },
-      });
-
-      notifyAdmin({
-        type: "new_booking",
-        data: { clientName, clientEmail: user.email || "", sessionDate: formattedDate, sessionTime: formattedTime, sessionType: getSessionTypeLabel(sessionType), goals: goals || undefined },
-      });
-
-      try {
-        const { data: adminRole } = await supabase.from("user_roles").select("user_id").eq("role", "admin").limit(1).maybeSingle();
-        if (adminRole) {
-          await supabase.functions.invoke("send-push", {
-            body: { userId: adminRole.user_id, title: `Nouvelle réservation de ${clientName}`, body: `${getSessionTypeLabel(sessionType)} — ${formattedDate} à ${formattedTime}`, url: "/admin?tab=bookings" },
-          });
-        }
-      } catch {}
-
-      toast({ title: "Demande envoyée !", description: "Votre demande a été envoyée. Anaïs vous confirmera rapidement." });
-      setSessionDate(""); setSessionTime(""); setSessionType("individual"); setGoals(""); setNotes("");
-      setIsDialogOpen(false);
-      fetchBookings();
-    } catch (error: any) {
-      toast({ title: "Erreur", description: error.message, variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -179,6 +114,7 @@ export function ClientBookings() {
 
   const upcomingBookings = bookings.filter(b => new Date(b.session_date) >= new Date() && b.status !== "cancelled");
   const pastBookings = bookings.filter(b => new Date(b.session_date) < new Date() || b.status === "cancelled");
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const displayedHistory = showAllHistory ? pastBookings : pastBookings.slice(0, 10);
 
   if (isLoading) {
@@ -189,63 +125,23 @@ export function ClientBookings() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-heading font-semibold text-foreground">Mes réservations</h2>
-          <p className="text-muted-foreground">Gérez vos séances de coaching</p>
+          <h2 className="text-xl font-heading font-semibold text-foreground">Mes séances</h2>
+          <p className="text-muted-foreground">Retrouvez vos séances planifiées par Anaïs</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 shadow-md">
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle réservation
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle className="font-heading">Demander une séance</DialogTitle>
-              <DialogDescription>Remplissez le formulaire pour demander une nouvelle séance.</DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Date souhaitée</Label>
-                    <Input id="date" type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} min={new Date().toISOString().split("T")[0]} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="time">Heure</Label>
-                    <Input id="time" type="time" value={sessionTime} onChange={(e) => setSessionTime(e.target.value)} required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Type de séance</Label>
-                  <Select value={sessionType} onValueChange={setSessionType}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="individual">Séance individuelle</SelectItem>
-                      <SelectItem value="duo">Séance duo</SelectItem>
-                      <SelectItem value="group">Séance en groupe</SelectItem>
-                      <SelectItem value="outdoor">Séance en extérieur</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Objectif</Label>
-                  <Input placeholder="Ex: Renforcement musculaire, cardio..." value={goals} onChange={(e) => setGoals(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Message (optionnel)</Label>
-                  <Textarea placeholder="Informations complémentaires..." value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Annuler</Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Envoi...</> : "Envoyer la demande"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => {
+            // Navigate to messages tab
+            const params = new URLSearchParams(window.location.search);
+            params.set("tab", "messages");
+            window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+            window.dispatchEvent(new Event("popstate"));
+          }}
+        >
+          <MessageCircle className="h-4 w-4" />
+          Contacter Anaïs
+        </Button>
       </div>
 
       {/* Upcoming Bookings */}
@@ -262,7 +158,7 @@ export function ClientBookings() {
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
                 <Calendar className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-muted-foreground">Aucune séance à venir. Réservez votre prochaine séance !</p>
+              <p className="text-muted-foreground">Aucune séance à venir. Contactez Anaïs pour planifier votre prochaine séance !</p>
             </div>
           ) : (
             <div className="space-y-4">
