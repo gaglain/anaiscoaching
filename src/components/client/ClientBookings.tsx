@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Loader2, CalendarClock, History, MessageCircle } from "lucide-react";
+import { Calendar, Loader2, CalendarClock, History, MessageCircle, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -143,6 +144,13 @@ export function ClientBookings() {
           Contacter Anaïs
         </Button>
       </div>
+
+      <Alert className="border-primary/20 bg-primary/5">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-muted-foreground">
+          Les séances sont planifiées directement par Anaïs après un premier échange. Utilisez la messagerie pour la contacter et organiser vos rendez-vous.
+        </AlertDescription>
+      </Alert>
 
       {/* Upcoming Bookings */}
       <Card className="border-primary/20">
