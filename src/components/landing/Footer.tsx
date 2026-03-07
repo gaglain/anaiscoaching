@@ -79,13 +79,13 @@ export function Footer() {
             <h4 className="font-heading font-semibold text-lg">Espace client</h4>
             <nav className="flex flex-col gap-2">
               <Link
-                to="/login"
+                to="/connexion"
                 className="text-secondary-foreground/70 hover:text-primary transition-colors"
               >
                 Connexion
               </Link>
               <Link
-                to="/signup"
+                to="/inscription"
                 className="text-secondary-foreground/70 hover:text-primary transition-colors"
               >
                 Créer un compte
