@@ -89,7 +89,7 @@ export function RemoteCoachingSection() {
               {includes.map((item) => (
                 <div key={item} className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-secondary-foreground/80">{item}</span>
+                  <span className="text-muted-foreground">{item}</span>
                 </div>
               ))}
             </div>
