@@ -3,10 +3,12 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { WhyCoachSection } from "@/components/landing/WhyCoachSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { RemoteCoachingSection } from "@/components/landing/RemoteCoachingSection";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 import { CoachSection } from "@/components/landing/CoachSection";
 import { BookingSection } from "@/components/landing/BookingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
 import { Footer } from "@/components/landing/Footer";
+import { AnimatedSection } from "@/components/landing/AnimatedSection";
 
 const Index = () => {
   return (
@@ -14,12 +16,25 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
-        <WhyCoachSection />
-        <ServicesSection />
-        <RemoteCoachingSection />
-        <CoachSection />
-        <BookingSection />
-        <FAQSection />
+        <AnimatedSection>
+          <WhyCoachSection />
+        </AnimatedSection>
+        <AnimatedSection>
+          <ServicesSection />
+        </AnimatedSection>
+        <AnimatedSection>
+          <RemoteCoachingSection />
+        </AnimatedSection>
+        <TestimonialsSection />
+        <AnimatedSection>
+          <CoachSection />
+        </AnimatedSection>
+        <AnimatedSection>
+          <BookingSection />
+        </AnimatedSection>
+        <AnimatedSection>
+          <FAQSection />
+        </AnimatedSection>
       </main>
       <Footer />
     </div>
