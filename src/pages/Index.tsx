@@ -4,6 +4,7 @@ import { WhyCoachSection } from "@/components/landing/WhyCoachSection";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { RemoteCoachingSection } from "@/components/landing/RemoteCoachingSection";
 import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { GallerySection } from "@/components/landing/GallerySection";
 import { CoachSection } from "@/components/landing/CoachSection";
 import { BookingSection } from "@/components/landing/BookingSection";
 import { FAQSection } from "@/components/landing/FAQSection";
@@ -26,6 +27,7 @@ const Index = () => {
           <RemoteCoachingSection />
         </AnimatedSection>
         <TestimonialsSection />
+        <GallerySection />
         <AnimatedSection>
           <CoachSection />
         </AnimatedSection>
