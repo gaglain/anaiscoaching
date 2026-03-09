@@ -180,7 +180,7 @@ export function BookingSection() {
                   Anaïs recevra ton message par email et te recontactera rapidement.
                 </p>
 
-                <form onSubmit={handleContactSubmit} className="space-y-5">
+                <form onSubmit={handleContactSubmit} className="space-y-5 relative">
                   <div className="grid md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label htmlFor="contact-name">Prénom et nom *</Label>
