@@ -44,7 +44,40 @@ export function BookingSection() {
 
   const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Honeypot check
+    if (honeypotRef.current?.value) {
+      // Bot detected — silently pretend success
+      toast({
+        title: "Demande envoyée ✅",
+        description: "Anaïs te recontactera très rapidement !",
+      });
+      (e.target as HTMLFormElement).reset();
+      return;
+    }
+
+    // Rate limiting: max 3 submissions per 2 minutes
+    const now = Date.now();
+    if (now - lastSubmitTime < 10_000) {
+      toast({
+        title: "Trop de demandes",
+        description: "Merci de patienter quelques secondes avant de renvoyer.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (submitCount >= 3 && now - lastSubmitTime < 120_000) {
+      toast({
+        title: "Limite atteinte",
+        description: "Tu as envoyé trop de demandes. Réessaie dans 2 minutes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    setLastSubmitTime(now);
+    setSubmitCount((c) => (now - lastSubmitTime > 120_000 ? 1 : c + 1));
 
     const formData = new FormData(e.currentTarget);
     const name = formData.get("contact-name") as string;
