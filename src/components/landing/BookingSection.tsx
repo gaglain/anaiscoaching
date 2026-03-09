@@ -269,7 +269,6 @@ export function BookingSection() {
                       autoComplete="off"
                     />
                   </div>
-                  </div>
 
                   <Button
                     type="submit"
