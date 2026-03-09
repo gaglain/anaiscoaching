@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, MessageSquare, User, CheckCircle, ArrowRight, Send, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
