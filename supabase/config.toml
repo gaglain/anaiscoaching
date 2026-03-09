@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.outlook-calendar-callback]
 verify_jwt = false
+
+[functions.notify-admin]
+verify_jwt = false
