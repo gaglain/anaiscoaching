@@ -257,6 +257,20 @@ export function BookingSection() {
                     />
                   </div>
 
+                  {/* Honeypot field - hidden from real users */}
+                  <div className="absolute opacity-0 pointer-events-none -z-10" aria-hidden="true" tabIndex={-1}>
+                    <label htmlFor="website-url">Ne pas remplir</label>
+                    <input
+                      ref={honeypotRef}
+                      type="text"
+                      id="website-url"
+                      name="website-url"
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
+                  </div>
+
                   <Button
                     type="submit"
                     size="lg"
