@@ -88,7 +88,18 @@ export function BookingSection() {
     const message = formData.get("contact-message") as string;
 
     try {
-      await supabase.functions.invoke("notify-admin", {
+      // Save to database for in-app notifications
+      await supabase.from("contact_requests").insert({
+        name,
+        email,
+        phone: phone || null,
+        session_type: sessionType || null,
+        goal: goal || null,
+        message: message || null,
+      });
+
+      // Also send email notification
+      supabase.functions.invoke("notify-admin", {
         body: {
           type: "contact_form",
           name,

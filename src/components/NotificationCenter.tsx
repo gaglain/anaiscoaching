@@ -10,7 +10,7 @@ import { fr } from "date-fns/locale";
 
 interface Notification {
   id: string;
-  type: "message" | "booking";
+  type: "message" | "booking" | "contact" | "signup";
   title: string;
   description: string;
   date: string;
@@ -29,7 +29,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   const fetchNotifications = async () => {
     if (!user) return;
 
-    const [messagesRes, bookingsRes] = await Promise.all([
+    const [messagesRes, bookingsRes, contactsRes, signupsRes] = await Promise.all([
       supabase
         .from("messages")
         .select("id, content, created_at, read_at, sender_id")
@@ -40,6 +40,17 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       supabase
         .from("bookings")
         .select("id, session_date, session_type, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabase
+        .from("contact_requests")
+        .select("id, name, email, session_type, goal, created_at, read")
+        .eq("read", false)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("profiles")
+        .select("id, name, email, created_at")
         .order("created_at", { ascending: false })
         .limit(5),
     ]);
@@ -74,6 +85,36 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       });
     }
 
+    if (contactsRes.data) {
+      contactsRes.data.forEach((c) => {
+        items.push({
+          id: c.id,
+          type: "contact",
+          title: `Demande de ${c.name}`,
+          description: c.goal ? `Objectif : ${c.goal}` : c.email,
+          date: c.created_at,
+          read: false,
+        });
+      });
+    }
+
+    if (signupsRes.data) {
+      // Only show signups from last 7 days
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      signupsRes.data
+        .filter((p) => p.created_at > weekAgo && p.id !== user.id)
+        .forEach((p) => {
+          items.push({
+            id: p.id,
+            type: "signup",
+            title: "Nouvelle inscription",
+            description: p.name || p.email || "",
+            date: p.created_at,
+            read: true,
+          });
+        });
+    }
+
     items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setNotifications(items);
   };
@@ -85,6 +126,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       .channel("notif-center")
       .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `receiver_id=eq.${user?.id}` }, () => fetchNotifications())
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => fetchNotifications())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_requests" }, () => fetchNotifications())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, () => fetchNotifications())
       .subscribe();
 
     return () => {
@@ -100,6 +143,10 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       onNavigate("messages");
     } else if (n.type === "booking" && onNavigate) {
       onNavigate("bookings");
+    } else if (n.type === "contact" && onNavigate) {
+      onNavigate("clients");
+    } else if (n.type === "signup" && onNavigate) {
+      onNavigate("clients");
     }
   };
 
@@ -128,7 +175,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
             <div className="divide-y divide-border">
               {notifications.map((n) => (
                 <button
-                  key={n.id}
+                  key={`${n.type}-${n.id}`}
                   onClick={() => handleClick(n)}
                   className={`w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors ${!n.read ? "bg-accent/20" : ""}`}
                 >

@@ -204,6 +204,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_requests: {
+        Row: {
+          created_at: string
+          email: string
+          goal: string | null
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+          read: boolean
+          session_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          goal?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          read?: boolean
+          session_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          goal?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          read?: boolean
+          session_type?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
