@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, MessageSquare, User, CheckCircle, ArrowRight, Send, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,10 +38,46 @@ export function BookingSection() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastSubmitTime, setLastSubmitTime] = useState(0);
+  const [submitCount, setSubmitCount] = useState(0);
+  const honeypotRef = useRef<HTMLInputElement>(null);
 
   const handleContactSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Honeypot check
+    if (honeypotRef.current?.value) {
+      // Bot detected — silently pretend success
+      toast({
+        title: "Demande envoyée ✅",
+        description: "Anaïs te recontactera très rapidement !",
+      });
+      (e.target as HTMLFormElement).reset();
+      return;
+    }
+
+    // Rate limiting: max 3 submissions per 2 minutes
+    const now = Date.now();
+    if (now - lastSubmitTime < 10_000) {
+      toast({
+        title: "Trop de demandes",
+        description: "Merci de patienter quelques secondes avant de renvoyer.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (submitCount >= 3 && now - lastSubmitTime < 120_000) {
+      toast({
+        title: "Limite atteinte",
+        description: "Tu as envoyé trop de demandes. Réessaie dans 2 minutes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    setLastSubmitTime(now);
+    setSubmitCount((c) => (now - lastSubmitTime > 120_000 ? 1 : c + 1));
 
     const formData = new FormData(e.currentTarget);
     const name = formData.get("contact-name") as string;
@@ -144,7 +180,7 @@ export function BookingSection() {
                   Anaïs recevra ton message par email et te recontactera rapidement.
                 </p>
 
-                <form onSubmit={handleContactSubmit} className="space-y-5">
+                <form onSubmit={handleContactSubmit} className="space-y-5 relative">
                   <div className="grid md:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label htmlFor="contact-name">Prénom et nom *</Label>
@@ -218,6 +254,19 @@ export function BookingSection() {
                       name="contact-message"
                       placeholder="Dis-moi en plus sur tes objectifs, tes contraintes ou tes disponibilités..."
                       rows={4}
+                    />
+                  </div>
+
+                  {/* Honeypot field - hidden from real users */}
+                  <div className="absolute opacity-0 pointer-events-none -z-10" aria-hidden="true" tabIndex={-1}>
+                    <label htmlFor="website-url">Ne pas remplir</label>
+                    <input
+                      ref={honeypotRef}
+                      type="text"
+                      id="website-url"
+                      name="website-url"
+                      tabIndex={-1}
+                      autoComplete="off"
                     />
                   </div>
 
