@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock } from "lucide-react";
+import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock, Reply, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
@@ -49,6 +49,9 @@ export function AdminClients() {
 
   // Contact requests
   const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
+  const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactRequest | null }>({ open: false, contact: null });
+  const [replyMessage, setReplyMessage] = useState("");
+  const [isSendingReply, setIsSendingReply] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -73,6 +76,48 @@ export function AdminClients() {
   const markContactAsRead = async (id: string) => {
     await supabase.from("contact_requests").update({ read: true }).eq("id", id);
     fetchContactRequests();
+  };
+
+  const openReplyDialog = (contact: ContactRequest) => {
+    setReplyDialog({ open: true, contact });
+    setReplyMessage("");
+  };
+
+  const sendReply = async () => {
+    if (!replyDialog.contact || !replyMessage.trim()) return;
+    setIsSendingReply(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-email", {
+        body: {
+          type: "contact_reply",
+          to: replyDialog.contact.email,
+          data: {
+            clientName: replyDialog.contact.name,
+            replyMessage: replyMessage.trim(),
+          },
+        },
+      });
+      if (error) throw error;
+
+      // Mark as read after replying
+      await supabase.from("contact_requests").update({ read: true }).eq("id", replyDialog.contact.id);
+      fetchContactRequests();
+
+      toast({
+        title: "Réponse envoyée",
+        description: `Email envoyé à ${replyDialog.contact.email}`,
+      });
+      setReplyDialog({ open: false, contact: null });
+    } catch (error: any) {
+      console.error("Error sending reply:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer la réponse. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingReply(false);
+    }
   };
 
   const fetchClients = async () => {
@@ -326,17 +371,28 @@ export function AdminClients() {
                     {format(new Date(cr.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                   </p>
                 </div>
-                {!cr.read && (
+                <div className="flex flex-col gap-1 shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => markContactAsRead(cr.id)}
-                    className="shrink-0 text-secondary hover:text-secondary hover:bg-secondary/10"
+                    onClick={() => openReplyDialog(cr)}
+                    className="text-secondary hover:text-secondary hover:bg-secondary/10"
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Lu
+                    <Reply className="h-4 w-4 mr-1" />
+                    Répondre
                   </Button>
-                )}
+                  {!cr.read && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => markContactAsRead(cr.id)}
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Lu
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>
@@ -593,6 +649,56 @@ export function AdminClients() {
             <Button variant="destructive" onClick={handleDeleteClient} disabled={isDeleting}>
               {isDeleting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Supprimer définitivement
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reply Dialog */}
+      <Dialog open={replyDialog.open} onOpenChange={(open) => !open && setReplyDialog({ open: false, contact: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Répondre à {replyDialog.contact?.name}</DialogTitle>
+            <DialogDescription>
+              Un email sera envoyé à {replyDialog.contact?.email}
+            </DialogDescription>
+          </DialogHeader>
+          {replyDialog.contact && (
+            <div className="space-y-3">
+              <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                {replyDialog.contact.session_type && (
+                  <p className="text-muted-foreground">Type : {replyDialog.contact.session_type}</p>
+                )}
+                {replyDialog.contact.goal && (
+                  <p className="text-muted-foreground">Objectif : {replyDialog.contact.goal}</p>
+                )}
+                {replyDialog.contact.message && (
+                  <p className="text-muted-foreground italic">"{replyDialog.contact.message}"</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Votre réponse</Label>
+                <Textarea
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  placeholder="Écrivez votre réponse..."
+                  rows={5}
+                  className="border-border focus:border-secondary"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReplyDialog({ open: false, contact: null })}>
+              Annuler
+            </Button>
+            <Button
+              onClick={sendReply}
+              disabled={isSendingReply || !replyMessage.trim()}
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            >
+              {isSendingReply ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Envoyer
             </Button>
           </DialogFooter>
         </DialogContent>

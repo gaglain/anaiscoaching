@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document" | "account_created" | "booking_rescheduled";
+  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document" | "account_created" | "booking_rescheduled" | "contact_reply";
   to: string;
   data: {
     clientName?: string;
@@ -25,6 +25,7 @@ interface EmailRequest {
     email?: string;
     password?: string;
     role?: string;
+    replyMessage?: string;
   };
 }
 
@@ -236,6 +237,25 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
               <a href="https://anaiscoaching.lovable.app/espace-client" style="${buttonStyle}">
                 Voir mes réservations
               </a>
+            </p>
+          </div>
+        `,
+      };
+
+    case "contact_reply":
+      return {
+        subject: "Réponse d'Anaïs Dubois Coach 💬",
+        html: `
+          <div style="${baseStyle}">
+            <h1 style="color: #f05a28;">Bonjour ${data.clientName} !</h1>
+            <p>Anaïs Dubois vous a répondu suite à votre demande de contact :</p>
+            <div style="background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f05a28;">
+              <p style="white-space: pre-line;">${data.replyMessage}</p>
+            </div>
+            <p style="margin-top: 24px; color: #666;">
+              À très vite,<br>
+              <strong>Anaïs Dubois</strong><br>
+              Coach sportif à Rennes
             </p>
           </div>
         `,

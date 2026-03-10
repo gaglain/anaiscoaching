@@ -137,8 +137,17 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleClick = (n: Notification) => {
+  const handleClick = async (n: Notification) => {
+    // Mark as read based on type
+    if (n.type === "message") {
+      await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", n.id);
+    } else if (n.type === "contact") {
+      await supabase.from("contact_requests").update({ read: true }).eq("id", n.id);
+    }
+    
+    fetchNotifications();
     setOpen(false);
+    
     if (n.type === "message" && onNavigate) {
       onNavigate("messages");
     } else if (n.type === "booking" && onNavigate) {
@@ -148,6 +157,15 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
     } else if (n.type === "signup" && onNavigate) {
       onNavigate("clients");
     }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await Promise.all([
+      supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("receiver_id", user.id).is("read_at", null),
+      supabase.from("contact_requests").update({ read: true }).eq("read", false),
+    ]);
+    fetchNotifications();
   };
 
   return (
@@ -163,8 +181,16 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0 z-[60] bg-popover border border-border shadow-lg">
-        <div className="px-4 py-3 border-b border-border">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <h4 className="text-sm font-semibold text-foreground">Notifications</h4>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="text-[11px] text-secondary hover:text-secondary/80 font-medium transition-colors"
+            >
+              Tout marquer lu
+            </button>
+          )}
         </div>
         <ScrollArea className="max-h-80">
           {notifications.length === 0 ? (
