@@ -49,6 +49,9 @@ export function AdminClients() {
 
   // Contact requests
   const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
+  const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactRequest | null }>({ open: false, contact: null });
+  const [replyMessage, setReplyMessage] = useState("");
+  const [isSendingReply, setIsSendingReply] = useState(false);
 
   useEffect(() => {
     fetchClients();
