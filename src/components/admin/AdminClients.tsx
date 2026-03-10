@@ -653,6 +653,56 @@ export function AdminClients() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reply Dialog */}
+      <Dialog open={replyDialog.open} onOpenChange={(open) => !open && setReplyDialog({ open: false, contact: null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Répondre à {replyDialog.contact?.name}</DialogTitle>
+            <DialogDescription>
+              Un email sera envoyé à {replyDialog.contact?.email}
+            </DialogDescription>
+          </DialogHeader>
+          {replyDialog.contact && (
+            <div className="space-y-3">
+              <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                {replyDialog.contact.session_type && (
+                  <p className="text-muted-foreground">Type : {replyDialog.contact.session_type}</p>
+                )}
+                {replyDialog.contact.goal && (
+                  <p className="text-muted-foreground">Objectif : {replyDialog.contact.goal}</p>
+                )}
+                {replyDialog.contact.message && (
+                  <p className="text-muted-foreground italic">"{replyDialog.contact.message}"</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Votre réponse</Label>
+                <Textarea
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  placeholder="Écrivez votre réponse..."
+                  rows={5}
+                  className="border-border focus:border-secondary"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReplyDialog({ open: false, contact: null })}>
+              Annuler
+            </Button>
+            <Button
+              onClick={sendReply}
+              disabled={isSendingReply || !replyMessage.trim()}
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+            >
+              {isSendingReply ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Envoyer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
