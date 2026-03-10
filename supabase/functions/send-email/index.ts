@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document" | "account_created" | "booking_rescheduled";
+  type: "booking_confirmation" | "booking_confirmed" | "booking_cancelled" | "new_message" | "welcome" | "new_document" | "account_created" | "booking_rescheduled" | "contact_reply";
   to: string;
   data: {
     clientName?: string;
@@ -25,6 +25,7 @@ interface EmailRequest {
     email?: string;
     password?: string;
     role?: string;
+    replyMessage?: string;
   };
 }
 
