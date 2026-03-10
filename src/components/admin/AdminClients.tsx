@@ -78,6 +78,48 @@ export function AdminClients() {
     fetchContactRequests();
   };
 
+  const openReplyDialog = (contact: ContactRequest) => {
+    setReplyDialog({ open: true, contact });
+    setReplyMessage("");
+  };
+
+  const sendReply = async () => {
+    if (!replyDialog.contact || !replyMessage.trim()) return;
+    setIsSendingReply(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-email", {
+        body: {
+          type: "contact_reply",
+          to: replyDialog.contact.email,
+          data: {
+            clientName: replyDialog.contact.name,
+            replyMessage: replyMessage.trim(),
+          },
+        },
+      });
+      if (error) throw error;
+
+      // Mark as read after replying
+      await supabase.from("contact_requests").update({ read: true }).eq("id", replyDialog.contact.id);
+      fetchContactRequests();
+
+      toast({
+        title: "Réponse envoyée",
+        description: `Email envoyé à ${replyDialog.contact.email}`,
+      });
+      setReplyDialog({ open: false, contact: null });
+    } catch (error: any) {
+      console.error("Error sending reply:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer la réponse. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingReply(false);
+    }
+  };
+
   const fetchClients = async () => {
     try {
       const { data: profiles, error } = await supabase
