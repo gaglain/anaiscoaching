@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2 } from "lucide-react";
+import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
@@ -17,6 +17,7 @@ import { exportClientsToCSV, type ExportClient } from "@/lib/exportCsv";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
+type ContactRequest = Tables<"contact_requests">;
 
 interface ClientWithStats extends Profile {
   bookingsCount: number;
@@ -46,9 +47,33 @@ export function AdminClients() {
   const [editTags, setEditTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
 
+  // Contact requests
+  const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
+
   useEffect(() => {
     fetchClients();
+    fetchContactRequests();
   }, []);
+
+  const fetchContactRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("contact_requests")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setContactRequests(data || []);
+    } catch (error) {
+      console.error("Error fetching contact requests:", error);
+    }
+  };
+
+  const markContactAsRead = async (id: string) => {
+    await supabase.from("contact_requests").update({ read: true }).eq("id", id);
+    fetchContactRequests();
+  };
 
   const fetchClients = async () => {
     try {
@@ -253,6 +278,70 @@ export function AdminClients() {
           </Button>
         </div>
       </div>
+
+      {/* Contact Requests */}
+      {contactRequests.length > 0 && (
+        <Card className="border-secondary/30 bg-secondary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-heading flex items-center gap-2">
+                <Mail className="h-5 w-5 text-secondary" />
+                Demandes de contact
+                {contactRequests.filter(c => !c.read).length > 0 && (
+                  <Badge className="bg-destructive text-destructive-foreground text-xs">
+                    {contactRequests.filter(c => !c.read).length} nouvelle(s)
+                  </Badge>
+                )}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {contactRequests.map((cr) => (
+              <div
+                key={cr.id}
+                className={`flex items-start justify-between gap-4 p-3 rounded-lg border transition-colors ${
+                  !cr.read ? "bg-accent/20 border-secondary/30" : "bg-card border-border/50"
+                }`}
+              >
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm ${!cr.read ? "font-semibold text-foreground" : "text-foreground"}`}>
+                      {cr.name}
+                    </p>
+                    {!cr.read && (
+                      <Badge variant="outline" className="text-[10px] border-secondary/40 text-secondary">Nouveau</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{cr.email}{cr.phone ? ` · ${cr.phone}` : ""}</p>
+                  {cr.session_type && (
+                    <p className="text-xs text-muted-foreground">Type : {cr.session_type}</p>
+                  )}
+                  {cr.goal && (
+                    <p className="text-xs text-muted-foreground">Objectif : {cr.goal}</p>
+                  )}
+                  {cr.message && (
+                    <p className="text-xs text-muted-foreground mt-1 italic">"{cr.message}"</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">
+                    {format(new Date(cr.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                  </p>
+                </div>
+                {!cr.read && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markContactAsRead(cr.id)}
+                    className="shrink-0 text-secondary hover:text-secondary hover:bg-secondary/10"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Lu
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Clients Grid */}
       {filteredClients.length === 0 ? (
