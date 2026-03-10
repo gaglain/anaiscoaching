@@ -17,6 +17,7 @@ import { exportClientsToCSV, type ExportClient } from "@/lib/exportCsv";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
+type ContactRequest = Tables<"contact_requests">;
 
 interface ClientWithStats extends Profile {
   bookingsCount: number;
