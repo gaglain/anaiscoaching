@@ -137,8 +137,17 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleClick = (n: Notification) => {
+  const handleClick = async (n: Notification) => {
+    // Mark as read based on type
+    if (n.type === "message") {
+      await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", n.id);
+    } else if (n.type === "contact") {
+      await supabase.from("contact_requests").update({ read: true }).eq("id", n.id);
+    }
+    
+    fetchNotifications();
     setOpen(false);
+    
     if (n.type === "message" && onNavigate) {
       onNavigate("messages");
     } else if (n.type === "booking" && onNavigate) {
@@ -148,6 +157,15 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
     } else if (n.type === "signup" && onNavigate) {
       onNavigate("clients");
     }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    await Promise.all([
+      supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("receiver_id", user.id).is("read_at", null),
+      supabase.from("contact_requests").update({ read: true }).eq("read", false),
+    ]);
+    fetchNotifications();
   };
 
   return (
