@@ -89,7 +89,7 @@ export function BookingSection() {
 
     try {
       // Save to database for in-app notifications
-      await supabase.from("contact_requests").insert({
+      const { error: insertError } = await supabase.from("contact_requests").insert({
         name,
         email,
         phone: phone || null,
@@ -98,8 +98,12 @@ export function BookingSection() {
         message: message || null,
       });
 
+      if (insertError) {
+        console.error("Error inserting contact request:", insertError);
+      }
+
       // Also send email notification
-      supabase.functions.invoke("notify-admin", {
+      const { error: fnError } = await supabase.functions.invoke("notify-admin", {
         body: {
           type: "contact_form",
           name,
@@ -110,6 +114,10 @@ export function BookingSection() {
           message,
         },
       });
+
+      if (fnError) {
+        console.error("Error calling notify-admin:", fnError);
+      }
 
       toast({
         title: "Demande envoyée ✅",
