@@ -371,17 +371,28 @@ export function AdminClients() {
                     {format(new Date(cr.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                   </p>
                 </div>
-                {!cr.read && (
+                <div className="flex flex-col gap-1 shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => markContactAsRead(cr.id)}
-                    className="shrink-0 text-secondary hover:text-secondary hover:bg-secondary/10"
+                    onClick={() => openReplyDialog(cr)}
+                    className="text-secondary hover:text-secondary hover:bg-secondary/10"
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Lu
+                    <Reply className="h-4 w-4 mr-1" />
+                    Répondre
                   </Button>
-                )}
+                  {!cr.read && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => markContactAsRead(cr.id)}
+                      className="text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Lu
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </CardContent>
