@@ -279,6 +279,70 @@ export function AdminClients() {
         </div>
       </div>
 
+      {/* Contact Requests */}
+      {contactRequests.length > 0 && (
+        <Card className="border-secondary/30 bg-secondary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-heading flex items-center gap-2">
+                <Mail className="h-5 w-5 text-secondary" />
+                Demandes de contact
+                {contactRequests.filter(c => !c.read).length > 0 && (
+                  <Badge className="bg-destructive text-destructive-foreground text-xs">
+                    {contactRequests.filter(c => !c.read).length} nouvelle(s)
+                  </Badge>
+                )}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {contactRequests.map((cr) => (
+              <div
+                key={cr.id}
+                className={`flex items-start justify-between gap-4 p-3 rounded-lg border transition-colors ${
+                  !cr.read ? "bg-accent/20 border-secondary/30" : "bg-card border-border/50"
+                }`}
+              >
+                <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className={`text-sm ${!cr.read ? "font-semibold text-foreground" : "text-foreground"}`}>
+                      {cr.name}
+                    </p>
+                    {!cr.read && (
+                      <Badge variant="outline" className="text-[10px] border-secondary/40 text-secondary">Nouveau</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{cr.email}{cr.phone ? ` · ${cr.phone}` : ""}</p>
+                  {cr.session_type && (
+                    <p className="text-xs text-muted-foreground">Type : {cr.session_type}</p>
+                  )}
+                  {cr.goal && (
+                    <p className="text-xs text-muted-foreground">Objectif : {cr.goal}</p>
+                  )}
+                  {cr.message && (
+                    <p className="text-xs text-muted-foreground mt-1 italic">"{cr.message}"</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground">
+                    {format(new Date(cr.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                  </p>
+                </div>
+                {!cr.read && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => markContactAsRead(cr.id)}
+                    className="shrink-0 text-secondary hover:text-secondary hover:bg-secondary/10"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Lu
+                  </Button>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Clients Grid */}
       {filteredClients.length === 0 ? (
         <Card className="border-border/50">
