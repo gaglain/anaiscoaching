@@ -181,8 +181,16 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0 z-[60] bg-popover border border-border shadow-lg">
-        <div className="px-4 py-3 border-b border-border">
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <h4 className="text-sm font-semibold text-foreground">Notifications</h4>
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="text-[11px] text-secondary hover:text-secondary/80 font-medium transition-colors"
+            >
+              Tout marquer lu
+            </button>
+          )}
         </div>
         <ScrollArea className="max-h-80">
           {notifications.length === 0 ? (
