@@ -47,9 +47,33 @@ export function AdminClients() {
   const [editTags, setEditTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
 
+  // Contact requests
+  const [contactRequests, setContactRequests] = useState<ContactRequest[]>([]);
+
   useEffect(() => {
     fetchClients();
+    fetchContactRequests();
   }, []);
+
+  const fetchContactRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("contact_requests")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setContactRequests(data || []);
+    } catch (error) {
+      console.error("Error fetching contact requests:", error);
+    }
+  };
+
+  const markContactAsRead = async (id: string) => {
+    await supabase.from("contact_requests").update({ read: true }).eq("id", id);
+    fetchContactRequests();
+  };
 
   const fetchClients = async () => {
     try {
