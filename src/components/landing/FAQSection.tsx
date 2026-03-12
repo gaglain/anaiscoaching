@@ -39,7 +39,7 @@ const faqs = [
   {
     question: "Est-ce que tu proposes des séances en visio ?",
     answer:
-      "Pour l'instant, Anaïs privilégie les séances en présentiel pour garantir un accompagnement optimal et corriger ta posture en temps réel. Cela permet d'assurer ta sécurité et de maximiser l'efficacité des exercices.",
+      "Oui ! Anaïs propose du coaching à distance avec un programme d'entraînement personnalisé et un suivi régulier en visio ou par messagerie. Tu bénéficies d'un plan détaillé, de vidéos explicatives des exercices, d'échanges réguliers pour ajuster ta progression et d'un accompagnement aussi complet qu'en présentiel — où que tu sois en France.",
   },
 ];
 
