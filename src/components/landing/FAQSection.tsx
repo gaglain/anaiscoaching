@@ -9,37 +9,37 @@ const faqs = [
   {
     question: "Combien de temps dure une séance avec ton coach sportif à Rennes ?",
     answer:
-      "Les séances durent en général entre 45 minutes et 1 heure, selon ton niveau et l'objectif de la séance. Pour les séances de remise en forme ou de renforcement, 1 heure est souvent idéal pour un échauffement complet, le travail principal et les étirements.",
+      "Mes séances durent en général entre 45 minutes et 1 heure, selon ton niveau et l'objectif de la séance. Pour les séances de remise en forme ou de renforcement, 1 heure est souvent idéal pour un échauffement complet, le travail principal et les étirements.",
   },
   {
     question: "Où se déroulent les séances de coaching à Rennes ?",
     answer:
-      "Les séances peuvent avoir lieu à domicile, en extérieur dans Rennes et ses environs (parcs, espaces verts), ou dans un lieu défini avec Anaïs en fonction de tes préférences. La flexibilité est au cœur de l'accompagnement.",
+      "Les séances peuvent avoir lieu à domicile, en extérieur dans Rennes et ses environs (parcs, espaces verts), ou dans un lieu qu'on définit ensemble en fonction de tes préférences. La flexibilité est au cœur de mon accompagnement.",
   },
   {
     question: "Faut-il avoir un niveau sportif pour commencer ?",
     answer:
-      "Absolument pas ! Anaïs accompagne aussi bien les débutants que les sportifs confirmés. Chaque programme est adapté à ton niveau actuel, tes capacités et tes objectifs. L'important est de commencer, peu importe d'où tu pars.",
+      "Absolument pas ! J'accompagne aussi bien les débutants que les sportifs confirmés. Chaque programme est adapté à ton niveau actuel, tes capacités et tes objectifs. L'important est de commencer, peu importe d'où tu pars.",
   },
   {
     question: "Comment se passe la première séance ?",
     answer:
-      "La première séance est un moment d'échange pour faire connaissance, comprendre tes objectifs et évaluer ton niveau. Anaïs prendra le temps de te poser des questions sur ton historique sportif, tes contraintes et tes attentes pour construire un programme sur-mesure.",
+      "La première séance est un moment d'échange pour faire connaissance, comprendre tes objectifs et évaluer ton niveau. Je prends le temps de te poser des questions sur ton historique sportif, tes contraintes et tes attentes pour construire un programme sur-mesure.",
   },
   {
     question: "Quels sont les tarifs du coaching sportif à Rennes ?",
     answer:
-      "Les tarifs varient selon le format choisi (individuel, duo, petit groupe) et la fréquence des séances. Contacte Anaïs via le formulaire pour recevoir une proposition adaptée à ta situation et tes objectifs.",
+      "Mes tarifs varient selon le format choisi (individuel, duo, petit groupe) et la fréquence des séances. Contacte-moi via le formulaire pour recevoir une proposition adaptée à ta situation et tes objectifs.",
   },
   {
     question: "Comment annuler ou reporter une séance ?",
     answer:
-      "Tu peux annuler ou reporter une séance directement depuis ton espace client en ligne. Pour les annulations de dernière minute (moins de 24h), merci de contacter Anaïs directement par message.",
+      "Tu peux annuler ou reporter une séance directement depuis ton espace client en ligne. Pour les annulations de dernière minute (moins de 24h), contacte-moi directement par message.",
   },
   {
     question: "Est-ce que tu proposes des séances en visio ?",
     answer:
-      "Oui ! Anaïs propose du coaching à distance avec un programme d'entraînement personnalisé et un suivi régulier en visio ou par messagerie. Tu bénéficies d'un plan détaillé, de vidéos explicatives des exercices, d'échanges réguliers pour ajuster ta progression et d'un accompagnement aussi complet qu'en présentiel — où que tu sois en France.",
+      "Oui ! Je propose du coaching à distance avec un programme d'entraînement personnalisé et un suivi régulier en visio ou par messagerie. Tu bénéficies d'un plan détaillé, de vidéos explicatives des exercices, d'échanges réguliers pour ajuster ta progression et d'un accompagnement aussi complet qu'en présentiel — où que tu sois en France.",
   },
 ];
 
