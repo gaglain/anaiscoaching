@@ -34,6 +34,7 @@ export function AdminMessages() {
   const [isSending, setIsSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const selectedClientRef = useRef<Profile | null>(null);
   const [isNewConvoOpen, setIsNewConvoOpen] = useState(false);
   const [allClients, setAllClients] = useState<Profile[]>([]);
   const [selectedNewClient, setSelectedNewClient] = useState<string>("");
