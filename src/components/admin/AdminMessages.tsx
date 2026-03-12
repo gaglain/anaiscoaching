@@ -200,14 +200,17 @@ export function AdminMessages() {
 
       if (error) throw error;
 
-      // Get client email from the profile (we need to fetch it with email)
+      // Get client profile with preferences
       const { data: clientProfile } = await supabase
         .from("profiles")
-        .select("email")
+        .select("email, notification_preferences")
         .eq("id", selectedClient.id)
         .single();
 
-      if (clientProfile?.email) {
+      const prefs = (clientProfile?.notification_preferences as any) || { email: true, push: true };
+
+      // Send email if client has email notifications enabled
+      if (clientProfile?.email && prefs.email) {
         sendEmail({
           type: "new_message",
           to: clientProfile.email,
@@ -218,18 +221,20 @@ export function AdminMessages() {
         });
       }
 
-      // Send push notification
-      try {
-        await supabase.functions.invoke('send-push', {
-          body: {
-            userId: selectedClient.id,
-            title: 'Nouveau message de votre coach',
-            body: newMessage.trim().substring(0, 100),
-            url: '/espace-client?tab=messages',
-          },
-        });
-      } catch (pushError) {
-        console.error('Push notification error:', pushError);
+      // Send push notification if client has push enabled
+      if (prefs.push) {
+        try {
+          await supabase.functions.invoke('send-push', {
+            body: {
+              userId: selectedClient.id,
+              title: 'Nouveau message de votre coach',
+              body: newMessage.trim().substring(0, 100),
+              url: '/espace-client?tab=messages',
+            },
+          });
+        } catch (pushError) {
+          console.error('Push notification error:', pushError);
+        }
       }
 
       setMessages((prev) => [...prev, data]);
