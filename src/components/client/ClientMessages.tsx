@@ -144,13 +144,17 @@ export function ClientMessages() {
         .single();
 
       // Notify admin about new message (email)
-      notifyAdmin({
-        type: "new_message",
-        data: {
-          clientName: profile?.name || "Client",
-          messagePreview: newMessage.trim().substring(0, 100),
-        },
-      });
+      try {
+        await notifyAdmin({
+          type: "new_message",
+          data: {
+            clientName: profile?.name || "Client",
+            messagePreview: newMessage.trim().substring(0, 100),
+          },
+        });
+      } catch (emailError) {
+        console.error("Email notification error:", emailError);
+      }
 
       // Send push notification to admin
       try {
