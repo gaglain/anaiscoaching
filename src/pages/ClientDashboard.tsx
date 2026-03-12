@@ -10,7 +10,7 @@ import { ClientMessages } from "@/components/client/ClientMessages";
 import { ClientStats } from "@/components/client/ClientStats";
 import { ClientDocuments } from "@/components/client/ClientDocuments";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import { NotificationToggle } from "@/components/NotificationToggle";
+import { ClientSettings } from "@/components/client/ClientSettings";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import logo from "@/assets/logo.png";
