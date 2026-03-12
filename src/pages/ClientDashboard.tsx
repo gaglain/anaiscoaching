@@ -159,7 +159,7 @@ export default function ClientDashboard() {
           </TabsContent>
 
           <TabsContent value="settings">
-            <NotificationToggle />
+            <ClientSettings />
           </TabsContent>
         </Tabs>
       </main>
