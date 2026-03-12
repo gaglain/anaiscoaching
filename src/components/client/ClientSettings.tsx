@@ -79,7 +79,7 @@ export function ClientSettings() {
 
     const { error } = await supabase
       .from("profiles")
-      .update({ notification_preferences: newPrefs as unknown as Record<string, unknown> })
+      .update({ notification_preferences: newPrefs as any })
       .eq("id", user.id);
 
     if (error) {
