@@ -56,8 +56,8 @@ export function AdminMessages() {
           },
           () => {
             fetchConversations();
-            if (selectedClient) {
-              fetchMessages(selectedClient.id);
+            if (selectedClientRef.current) {
+              fetchMessages(selectedClientRef.current.id);
             }
           }
         )
