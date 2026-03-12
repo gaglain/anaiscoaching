@@ -179,6 +179,7 @@ export function AdminMessages() {
 
   const handleSelectClient = (client: Profile) => {
     setSelectedClient(client);
+    selectedClientRef.current = client;
     fetchMessages(client.id);
   };
 
