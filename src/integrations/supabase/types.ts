@@ -275,6 +275,7 @@ export type Database = {
           id: string
           level: string | null
           name: string
+          notification_preferences: Json
           onboarding_completed: boolean
           onboarding_data: Json | null
           phone: string | null
@@ -288,6 +289,7 @@ export type Database = {
           id: string
           level?: string | null
           name: string
+          notification_preferences?: Json
           onboarding_completed?: boolean
           onboarding_data?: Json | null
           phone?: string | null
@@ -301,6 +303,7 @@ export type Database = {
           id?: string
           level?: string | null
           name?: string
+          notification_preferences?: Json
           onboarding_completed?: boolean
           onboarding_data?: Json | null
           phone?: string | null
