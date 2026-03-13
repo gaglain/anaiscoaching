@@ -52,6 +52,7 @@ export function AdminClients() {
   const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactRequest | null }>({ open: false, contact: null });
   const [replyMessage, setReplyMessage] = useState("");
   const [isSendingReply, setIsSendingReply] = useState(false);
+  const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string }[]>([]);
 
   useEffect(() => {
     fetchClients();
