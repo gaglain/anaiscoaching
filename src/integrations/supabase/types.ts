@@ -204,6 +204,35 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_replies: {
+        Row: {
+          contact_request_id: string
+          created_at: string
+          id: string
+          message: string
+        }
+        Insert: {
+          contact_request_id: string
+          created_at?: string
+          id?: string
+          message: string
+        }
+        Update: {
+          contact_request_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_replies_contact_request_id_fkey"
+            columns: ["contact_request_id"]
+            isOneToOne: false
+            referencedRelation: "contact_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_requests: {
         Row: {
           created_at: string

@@ -252,6 +252,11 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
             <div style="background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f05a28;">
               <p style="white-space: pre-line;">${data.replyMessage}</p>
             </div>
+            <p style="margin-top: 24px;">
+              <a href="https://coachsportif-rennes.fr" style="${buttonStyle}">
+                Visiter le site
+              </a>
+            </p>
             <p style="margin-top: 24px; color: #666;">
               À très vite,<br>
               <strong>Anaïs Dubois</strong><br>
