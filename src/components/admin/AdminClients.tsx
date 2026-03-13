@@ -682,6 +682,7 @@ export function AdminClients() {
           {replyDialog.contact && (
             <div className="space-y-3">
               <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                <p className="font-medium text-foreground text-xs mb-1">Message initial :</p>
                 {replyDialog.contact.session_type && (
                   <p className="text-muted-foreground">Type : {replyDialog.contact.session_type}</p>
                 )}
@@ -692,6 +693,21 @@ export function AdminClients() {
                   <p className="text-muted-foreground italic">"{replyDialog.contact.message}"</p>
                 )}
               </div>
+              {replyHistory.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Réponses précédentes :</p>
+                  <div className="max-h-40 overflow-y-auto space-y-2">
+                    {replyHistory.map((reply) => (
+                      <div key={reply.id} className="bg-secondary/10 p-3 rounded-lg text-sm border border-secondary/20">
+                        <p className="text-foreground whitespace-pre-line">{reply.message}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Votre réponse</Label>
                 <Textarea
