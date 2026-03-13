@@ -210,18 +210,21 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          sender: string
         }
         Insert: {
           contact_request_id: string
           created_at?: string
           id?: string
           message: string
+          sender?: string
         }
         Update: {
           contact_request_id?: string
           created_at?: string
           id?: string
           message?: string
+          sender?: string
         }
         Relationships: [
           {
