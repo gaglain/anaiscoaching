@@ -79,9 +79,16 @@ export function AdminClients() {
     fetchContactRequests();
   };
 
-  const openReplyDialog = (contact: ContactRequest) => {
+  const openReplyDialog = async (contact: ContactRequest) => {
     setReplyDialog({ open: true, contact });
     setReplyMessage("");
+    // Fetch reply history
+    const { data } = await supabase
+      .from("contact_replies")
+      .select("*")
+      .eq("contact_request_id", contact.id)
+      .order("created_at", { ascending: true });
+    setReplyHistory(data || []);
   };
 
   const sendReply = async () => {
