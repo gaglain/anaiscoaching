@@ -52,7 +52,7 @@ export function AdminClients() {
   const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactRequest | null }>({ open: false, contact: null });
   const [replyMessage, setReplyMessage] = useState("");
   const [isSendingReply, setIsSendingReply] = useState(false);
-  const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string }[]>([]);
+  const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string; sender: string }[]>([]);
 
   useEffect(() => {
     fetchClients();
@@ -695,16 +695,29 @@ export function AdminClients() {
               </div>
               {replyHistory.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">Réponses précédentes :</p>
-                  <div className="max-h-40 overflow-y-auto space-y-2">
-                    {replyHistory.map((reply) => (
-                      <div key={reply.id} className="bg-secondary/10 p-3 rounded-lg text-sm border border-secondary/20">
-                        <p className="text-foreground whitespace-pre-line">{reply.message}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
-                        </p>
-                      </div>
-                    ))}
+                  <p className="text-xs font-medium text-muted-foreground">Historique des échanges :</p>
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {replyHistory.map((reply) => {
+                      const isProspect = reply.sender === "prospect";
+                      return (
+                        <div
+                          key={reply.id}
+                          className={`p-3 rounded-lg text-sm border ${
+                            isProspect
+                              ? "bg-accent/30 border-accent/40 ml-0 mr-8"
+                              : "bg-secondary/10 border-secondary/20 ml-8 mr-0"
+                          }`}
+                        >
+                          <p className="text-[10px] font-semibold mb-1">
+                            {isProspect ? `📩 ${replyDialog.contact?.name}` : "📤 Anaïs (vous)"}
+                          </p>
+                          <p className="text-foreground whitespace-pre-line">{reply.message}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
