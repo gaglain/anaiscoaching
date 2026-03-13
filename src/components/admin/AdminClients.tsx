@@ -95,6 +95,7 @@ export function AdminClients() {
     if (!replyDialog.contact || !replyMessage.trim()) return;
     setIsSendingReply(true);
     try {
+      // Send email
       const { error } = await supabase.functions.invoke("send-email", {
         body: {
           type: "contact_reply",
@@ -107,6 +108,12 @@ export function AdminClients() {
       });
       if (error) throw error;
 
+      // Save reply to history
+      await supabase.from("contact_replies").insert({
+        contact_request_id: replyDialog.contact.id,
+        message: replyMessage.trim(),
+      });
+
       // Mark as read after replying
       await supabase.from("contact_requests").update({ read: true }).eq("id", replyDialog.contact.id);
       fetchContactRequests();
@@ -116,6 +123,7 @@ export function AdminClients() {
         description: `Email envoyé à ${replyDialog.contact.email}`,
       });
       setReplyDialog({ open: false, contact: null });
+      setReplyHistory([]);
     } catch (error: any) {
       console.error("Error sending reply:", error);
       toast({
