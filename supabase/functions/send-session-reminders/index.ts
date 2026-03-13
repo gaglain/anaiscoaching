@@ -96,7 +96,7 @@ const sendReminderEmail = async (reminder: SessionReminder) => {
   `;
 
   return await resend.emails.send({
-    from: "Anaïs Dubois Coach <contact@coachsportif-rennes.fr>",
+    from: "Anaïs Dubois Coach <anais@coachsportif-rennes.fr>",
     to: [reminder.client_email],
     subject: `⏰ Rappel : Votre séance demain à ${formattedTime}`,
     html,

@@ -144,7 +144,7 @@ serve(async (req) => {
 
       if (adminProfile?.email) {
         await resend.emails.send({
-          from: "Anaïs Dubois Coach <contact@coachsportif-rennes.fr>",
+          from: "Anaïs Dubois Coach <anais@coachsportif-rennes.fr>",
           to: [adminProfile.email],
           subject: `📊 Récap hebdo — ${confirmed} séance${confirmed > 1 ? "s" : ""}, ${pending} en attente`,
           html,

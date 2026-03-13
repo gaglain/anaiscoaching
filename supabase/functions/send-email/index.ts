@@ -281,7 +281,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { subject, html } = getEmailContent(type, data);
 
     const emailResponse = await resend.emails.send({
-      from: "Anaïs Dubois Coach <contact@coachsportif-rennes.fr>",
+      from: "Anaïs Dubois Coach <anais@coachsportif-rennes.fr>",
       to: [to],
       subject,
       html,
