@@ -52,6 +52,7 @@ export function AdminClients() {
   const [replyDialog, setReplyDialog] = useState<{ open: boolean; contact: ContactRequest | null }>({ open: false, contact: null });
   const [replyMessage, setReplyMessage] = useState("");
   const [isSendingReply, setIsSendingReply] = useState(false);
+  const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string }[]>([]);
 
   useEffect(() => {
     fetchClients();
@@ -78,15 +79,23 @@ export function AdminClients() {
     fetchContactRequests();
   };
 
-  const openReplyDialog = (contact: ContactRequest) => {
+  const openReplyDialog = async (contact: ContactRequest) => {
     setReplyDialog({ open: true, contact });
     setReplyMessage("");
+    // Fetch reply history
+    const { data } = await supabase
+      .from("contact_replies")
+      .select("*")
+      .eq("contact_request_id", contact.id)
+      .order("created_at", { ascending: true });
+    setReplyHistory(data || []);
   };
 
   const sendReply = async () => {
     if (!replyDialog.contact || !replyMessage.trim()) return;
     setIsSendingReply(true);
     try {
+      // Send email
       const { error } = await supabase.functions.invoke("send-email", {
         body: {
           type: "contact_reply",
@@ -99,6 +108,12 @@ export function AdminClients() {
       });
       if (error) throw error;
 
+      // Save reply to history
+      await supabase.from("contact_replies").insert({
+        contact_request_id: replyDialog.contact.id,
+        message: replyMessage.trim(),
+      });
+
       // Mark as read after replying
       await supabase.from("contact_requests").update({ read: true }).eq("id", replyDialog.contact.id);
       fetchContactRequests();
@@ -108,6 +123,7 @@ export function AdminClients() {
         description: `Email envoyé à ${replyDialog.contact.email}`,
       });
       setReplyDialog({ open: false, contact: null });
+      setReplyHistory([]);
     } catch (error: any) {
       console.error("Error sending reply:", error);
       toast({
@@ -666,6 +682,7 @@ export function AdminClients() {
           {replyDialog.contact && (
             <div className="space-y-3">
               <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+                <p className="font-medium text-foreground text-xs mb-1">Message initial :</p>
                 {replyDialog.contact.session_type && (
                   <p className="text-muted-foreground">Type : {replyDialog.contact.session_type}</p>
                 )}
@@ -676,6 +693,21 @@ export function AdminClients() {
                   <p className="text-muted-foreground italic">"{replyDialog.contact.message}"</p>
                 )}
               </div>
+              {replyHistory.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Réponses précédentes :</p>
+                  <div className="max-h-40 overflow-y-auto space-y-2">
+                    {replyHistory.map((reply) => (
+                      <div key={reply.id} className="bg-secondary/10 p-3 rounded-lg text-sm border border-secondary/20">
+                        <p className="text-foreground whitespace-pre-line">{reply.message}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Votre réponse</Label>
                 <Textarea
