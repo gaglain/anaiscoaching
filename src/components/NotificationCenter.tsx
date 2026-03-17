@@ -10,7 +10,7 @@ import { fr } from "date-fns/locale";
 
 interface Notification {
   id: string;
-  type: "message" | "booking" | "contact" | "signup";
+  type: "message" | "booking" | "contact" | "signup" | "contact_reply";
   title: string;
   description: string;
   date: string;
@@ -29,7 +29,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   const fetchNotifications = async () => {
     if (!user) return;
 
-    const [messagesRes, bookingsRes, contactsRes, signupsRes] = await Promise.all([
+    const [messagesRes, bookingsRes, contactsRes, signupsRes, repliesRes] = await Promise.all([
       supabase
         .from("messages")
         .select("id, content, created_at, read_at, sender_id")
@@ -53,6 +53,12 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
         .select("id, name, email, created_at")
         .order("created_at", { ascending: false })
         .limit(5),
+      supabase
+        .from("contact_replies")
+        .select("id, message, created_at, sender, contact_request_id, contact_requests(name)")
+        .eq("sender", "prospect")
+        .order("created_at", { ascending: false })
+        .limit(10),
     ]);
 
     const items: Notification[] = [];
@@ -98,6 +104,24 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       });
     }
 
+    if (repliesRes.data) {
+      // Show prospect replies from last 7 days
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      repliesRes.data
+        .filter((r) => r.created_at > weekAgo)
+        .forEach((r) => {
+          const contactName = (r as any).contact_requests?.name || "Un prospect";
+          items.push({
+            id: r.id,
+            type: "contact_reply",
+            title: `Réponse de ${contactName}`,
+            description: r.message.length > 60 ? r.message.slice(0, 60) + "…" : r.message,
+            date: r.created_at,
+            read: false,
+          });
+        });
+    }
+
     if (signupsRes.data) {
       // Only show signups from last 7 days
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -127,6 +151,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `receiver_id=eq.${user?.id}` }, () => fetchNotifications())
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => fetchNotifications())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_requests" }, () => fetchNotifications())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_replies" }, () => fetchNotifications())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, () => fetchNotifications())
       .subscribe();
 
@@ -153,6 +178,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
     } else if (n.type === "booking" && onNavigate) {
       onNavigate("bookings");
     } else if (n.type === "contact" && onNavigate) {
+      onNavigate("clients");
+    } else if (n.type === "contact_reply" && onNavigate) {
       onNavigate("clients");
     } else if (n.type === "signup" && onNavigate) {
       onNavigate("clients");

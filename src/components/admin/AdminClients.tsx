@@ -672,7 +672,7 @@ export function AdminClients() {
 
       {/* Reply Dialog */}
       <Dialog open={replyDialog.open} onOpenChange={(open) => !open && setReplyDialog({ open: false, contact: null })}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Répondre à {replyDialog.contact?.name}</DialogTitle>
             <DialogDescription>
@@ -696,16 +696,16 @@ export function AdminClients() {
               {replyHistory.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">Historique des échanges :</p>
-                  <div className="max-h-60 overflow-y-auto space-y-2">
+                  <div className="max-h-48 sm:max-h-60 overflow-y-auto space-y-2">
                     {replyHistory.map((reply) => {
                       const isProspect = reply.sender === "prospect";
                       return (
                         <div
                           key={reply.id}
-                          className={`p-3 rounded-lg text-sm border ${
+                          className={`p-2 sm:p-3 rounded-lg text-sm border ${
                             isProspect
-                              ? "bg-accent/30 border-accent/40 ml-0 mr-8"
-                              : "bg-secondary/10 border-secondary/20 ml-8 mr-0"
+                              ? "bg-accent/30 border-accent/40 mr-4 sm:mr-8"
+                              : "bg-secondary/10 border-secondary/20 ml-4 sm:ml-8"
                           }`}
                         >
                           <p className="text-[10px] font-semibold mb-1">
@@ -727,13 +727,13 @@ export function AdminClients() {
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Écrivez votre réponse..."
-                  rows={5}
+                  rows={3}
                   className="border-border focus:border-secondary"
                 />
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setReplyDialog({ open: false, contact: null })}>
               Annuler
             </Button>

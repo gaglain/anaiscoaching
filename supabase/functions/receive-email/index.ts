@@ -143,6 +143,35 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("Prospect reply saved for contact request:", contactRequest.id);
 
+    // Send push notification to all admins
+    try {
+      const { data: adminRoles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (adminRoles) {
+        for (const admin of adminRoles) {
+          await supabase.functions.invoke("send-push", {
+            body: {
+              userId: admin.user_id,
+              title: `Réponse de ${contactRequest.name}`,
+              body: cleanBody.trim().substring(0, 100),
+              url: "/admin?tab=clients",
+            },
+          });
+        }
+      }
+    } catch (pushError) {
+      console.error("Push notification error:", pushError);
+    }
+
+    // Mark contact request as unread so it appears in notifications
+    await supabase
+      .from("contact_requests")
+      .update({ read: false })
+      .eq("id", contactRequest.id);
+
     return new Response(
       JSON.stringify({ ok: true, contact_request_id: contactRequest.id }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
