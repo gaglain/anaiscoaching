@@ -37,29 +37,21 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("Inbound email from:", senderEmail, "subject:", subject, "email_id:", emailId);
 
-    // Fetch the email body from Resend API
+    // Fetch the received email content from Resend's inbound API
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const emailResponse = await fetch(
-      `https://api.resend.com/emails/${emailId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-        },
-      }
-    );
+    const resend = new Resend(resendApiKey);
+    const { data: emailData, error: resendError } = await resend.emails.receiving.get(emailId);
 
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error("Failed to fetch email from Resend:", emailResponse.status, errorText);
-      throw new Error(`Failed to fetch email body: ${emailResponse.status}`);
+    if (resendError || !emailData) {
+      console.error("Failed to retrieve received email from Resend:", resendError);
+      throw new Error(resendError?.message || "Failed to fetch inbound email body");
     }
 
-    const emailData = await emailResponse.json();
-    console.log("Fetched email data keys:", Object.keys(emailData));
+    console.log("Fetched inbound email content for:", emailId);
 
     const textBody = emailData.text || emailData.html || "";
 
