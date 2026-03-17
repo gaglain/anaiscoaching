@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "npm:resend@6";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,29 +37,37 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log("Inbound email from:", senderEmail, "subject:", subject, "email_id:", emailId);
 
-    // Fetch the email body from Resend API
+    // Fetch the received email content from Resend's inbound API
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       throw new Error("RESEND_API_KEY is not configured");
     }
 
-    const emailResponse = await fetch(
-      `https://api.resend.com/emails/${emailId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-        },
-      }
-    );
+    const resend = new Resend(resendApiKey);
+    let emailData: { text?: string | null; html?: string | null } | null = null;
+    let lastResendError: unknown = null;
 
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error("Failed to fetch email from Resend:", emailResponse.status, errorText);
-      throw new Error(`Failed to fetch email body: ${emailResponse.status}`);
+    for (const delayMs of [0, 750, 1500, 3000]) {
+      if (delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
+      const { data: receivedEmail, error: resendError } = await resend.emails.receiving.get(emailId);
+
+      if (receivedEmail) {
+        emailData = receivedEmail;
+        console.log("Fetched inbound email content for:", emailId, "after delay", delayMs);
+        break;
+      }
+
+      lastResendError = resendError;
+      console.warn("Retrying inbound email fetch:", JSON.stringify({ emailId, delayMs, resendError }));
     }
 
-    const emailData = await emailResponse.json();
-    console.log("Fetched email data keys:", Object.keys(emailData));
+    if (!emailData) {
+      console.error("Failed to retrieve received email from Resend after retries:", lastResendError);
+      throw new Error("Inbound email content not yet available");
+    }
 
     const textBody = emailData.text || emailData.html || "";
 
