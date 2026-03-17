@@ -151,6 +151,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `receiver_id=eq.${user?.id}` }, () => fetchNotifications())
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => fetchNotifications())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_requests" }, () => fetchNotifications())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_replies" }, () => fetchNotifications())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, () => fetchNotifications())
       .subscribe();
 
