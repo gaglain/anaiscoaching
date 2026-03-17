@@ -14,28 +14,55 @@ interface PushPayload {
   url?: string;
 }
 
+async function getVapidKeys(supabase: any): Promise<{ publicKey: string; privateKey: string } | null> {
+  // Try env secrets first
+  let publicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+  let privateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+
+  if (publicKey && publicKey.length > 20 && privateKey && privateKey.length > 20) {
+    return { publicKey, privateKey };
+  }
+
+  // Fall back to app_settings table
+  const { data: pubData } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'VAPID_PUBLIC_KEY')
+    .single();
+
+  const { data: privData } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'VAPID_PRIVATE_KEY')
+    .single();
+
+  if (pubData?.value && privData?.value) {
+    return { publicKey: pubData.value, privateKey: privData.value };
+  }
+
+  return null;
+}
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
-    const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const vapidKeys = await getVapidKeys(supabase);
     const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT') || 'mailto:contact@coachsportif-rennes.fr';
 
-    if (!VAPID_PRIVATE_KEY || !VAPID_PUBLIC_KEY) {
+    if (!vapidKeys) {
       console.error('VAPID keys not configured');
       return new Response(
         JSON.stringify({ error: 'Push notifications not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { userId, type, title, body, url } = await req.json() as PushPayload;
 
@@ -49,7 +76,6 @@ serve(async (req) => {
     let targetUserIds: string[] = [];
 
     if (type === 'new_signup' || type === 'new_booking_admin') {
-      // Send to all admins
       const { data: adminRoles } = await supabase
         .from('user_roles')
         .select('user_id')
@@ -66,7 +92,6 @@ serve(async (req) => {
       );
     }
 
-    // Get push subscriptions for all target users
     const { data: subscriptions, error: subError } = await supabase
       .from('push_subscriptions')
       .select('*')
@@ -93,14 +118,11 @@ serve(async (req) => {
       url: url || '/espace-client?tab=messages',
     });
 
-    // Send push to all subscriptions
     const results = await Promise.all(
       subscriptions.map(async (sub) => {
         try {
-          // Use the web-push library via dynamic import
           const webPush = await import("https://esm.sh/web-push@3.6.6");
-          
-          webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+          webPush.setVapidDetails(VAPID_SUBJECT, vapidKeys.publicKey, vapidKeys.privateKey);
 
           const pushSubscription = {
             endpoint: sub.endpoint,
@@ -114,15 +136,9 @@ serve(async (req) => {
           return { success: true, endpoint: sub.endpoint };
         } catch (error: any) {
           console.error('Error sending push:', error);
-          
-          // If subscription is invalid, remove it
           if (error.statusCode === 404 || error.statusCode === 410) {
-            await supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('id', sub.id);
+            await supabase.from('push_subscriptions').delete().eq('id', sub.id);
           }
-          
           return { success: false, endpoint: sub.endpoint, error: error.message };
         }
       })
