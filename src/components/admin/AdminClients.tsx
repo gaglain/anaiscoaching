@@ -672,16 +672,16 @@ export function AdminClients() {
 
       {/* Reply Dialog */}
       <Dialog open={replyDialog.open} onOpenChange={(open) => !open && setReplyDialog({ open: false, contact: null })}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Répondre à {replyDialog.contact?.name}</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="pr-6">
+            <DialogTitle className="text-base sm:text-lg break-words">Répondre à {replyDialog.contact?.name}</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm break-all">
               Un email sera envoyé à {replyDialog.contact?.email}
             </DialogDescription>
           </DialogHeader>
           {replyDialog.contact && (
             <div className="space-y-3">
-              <div className="bg-muted/50 p-3 rounded-lg text-sm space-y-1">
+              <div className="bg-muted/50 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm space-y-1">
                 <p className="font-medium text-foreground text-xs mb-1">Message initial :</p>
                 {replyDialog.contact.session_type && (
                   <p className="text-muted-foreground">Type : {replyDialog.contact.session_type}</p>
@@ -690,7 +690,7 @@ export function AdminClients() {
                   <p className="text-muted-foreground">Objectif : {replyDialog.contact.goal}</p>
                 )}
                 {replyDialog.contact.message && (
-                  <p className="text-muted-foreground italic">"{replyDialog.contact.message}"</p>
+                  <p className="text-muted-foreground italic break-words">"{replyDialog.contact.message}"</p>
                 )}
               </div>
               {replyHistory.length > 0 && (
@@ -702,16 +702,16 @@ export function AdminClients() {
                       return (
                         <div
                           key={reply.id}
-                          className={`p-2 sm:p-3 rounded-lg text-sm border ${
+                          className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm border ${
                             isProspect
-                              ? "bg-accent/30 border-accent/40 mr-4 sm:mr-8"
-                              : "bg-secondary/10 border-secondary/20 ml-4 sm:ml-8"
+                              ? "bg-accent/30 border-accent/40 mr-2 sm:mr-8"
+                              : "bg-secondary/10 border-secondary/20 ml-2 sm:ml-8"
                           }`}
                         >
                           <p className="text-[10px] font-semibold mb-1">
                             {isProspect ? `📩 ${replyDialog.contact?.name}` : "📤 Anaïs (vous)"}
                           </p>
-                          <p className="text-foreground whitespace-pre-line">{reply.message}</p>
+                          <p className="text-foreground whitespace-pre-line break-words">{reply.message}</p>
                           <p className="text-[10px] text-muted-foreground mt-1">
                             {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                           </p>
@@ -722,25 +722,25 @@ export function AdminClients() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Votre réponse</Label>
+                <Label className="text-xs sm:text-sm">Votre réponse</Label>
                 <Textarea
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Écrivez votre réponse..."
                   rows={3}
-                  className="border-border focus:border-secondary"
+                  className="border-border focus:border-secondary text-sm"
                 />
               </div>
             </div>
           )}
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setReplyDialog({ open: false, contact: null })}>
+            <Button variant="outline" onClick={() => setReplyDialog({ open: false, contact: null })} className="w-full sm:w-auto">
               Annuler
             </Button>
             <Button
               onClick={sendReply}
               disabled={isSendingReply || !replyMessage.trim()}
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground w-full sm:w-auto"
             >
               {isSendingReply ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
               Envoyer
