@@ -26,15 +26,49 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const { data } = payload;
-    const fromEmail = data.from;
+    const emailId = data.email_id;
+    const fromRaw = data.from;
     const subject = data.subject || "";
-    const textBody = data.text || data.html || "";
 
     // Extract email address from "Name <email@example.com>" format
-    const emailMatch = fromEmail.match(/<([^>]+)>/) || [null, fromEmail];
-    const senderEmail = (emailMatch[1] || fromEmail).trim().toLowerCase();
+    const emailMatch = fromRaw.match(/<([^>]+)>/) || [null, fromRaw];
+    const senderEmail = (emailMatch[1] || fromRaw).trim().toLowerCase();
 
-    console.log("Inbound email from:", senderEmail, "subject:", subject);
+    console.log("Inbound email from:", senderEmail, "subject:", subject, "email_id:", emailId);
+
+    // Fetch the email body from Resend API
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY is not configured");
+    }
+
+    const emailResponse = await fetch(
+      `https://api.resend.com/emails/${emailId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+      }
+    );
+
+    if (!emailResponse.ok) {
+      const errorText = await emailResponse.text();
+      console.error("Failed to fetch email from Resend:", emailResponse.status, errorText);
+      throw new Error(`Failed to fetch email body: ${emailResponse.status}`);
+    }
+
+    const emailData = await emailResponse.json();
+    console.log("Fetched email data keys:", Object.keys(emailData));
+
+    const textBody = emailData.text || emailData.html || "";
+
+    if (!textBody.trim()) {
+      console.log("Empty email body, skipping");
+      return new Response(
+        JSON.stringify({ ok: true, message: "Empty email body" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     // Connect to Supabase with service role
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -63,13 +97,12 @@ serve(async (req: Request): Promise<Response> => {
 
     // Insert reply for the most recent contact request from this email
     const contactRequest = contactRequests[0];
-    
+
     // Clean the text body - remove quoted replies if possible
     let cleanBody = textBody;
-    // Try to extract only the new reply (before quoted text markers)
     const quoteMarkers = [
       /\nOn .+ wrote:/,
-      /\nLe .+ a écrit :/,
+      /\nLe .+ a écrit\s?:/,
       /\n----- Original Message -----/,
       /\n_{3,}/,
       /\n>{2,}/,
