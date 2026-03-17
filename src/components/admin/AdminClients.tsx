@@ -702,10 +702,10 @@ export function AdminClients() {
                       return (
                         <div
                           key={reply.id}
-                          className={`p-3 rounded-lg text-sm border ${
+                          className={`p-2 sm:p-3 rounded-lg text-sm border ${
                             isProspect
-                              ? "bg-accent/30 border-accent/40 ml-0 mr-8"
-                              : "bg-secondary/10 border-secondary/20 ml-8 mr-0"
+                              ? "bg-accent/30 border-accent/40 mr-4 sm:mr-8"
+                              : "bg-secondary/10 border-secondary/20 ml-4 sm:ml-8"
                           }`}
                         >
                           <p className="text-[10px] font-semibold mb-1">
