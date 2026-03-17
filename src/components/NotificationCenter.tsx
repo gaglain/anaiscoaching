@@ -29,7 +29,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   const fetchNotifications = async () => {
     if (!user) return;
 
-    const [messagesRes, bookingsRes, contactsRes, signupsRes] = await Promise.all([
+    const [messagesRes, bookingsRes, contactsRes, signupsRes, repliesRes] = await Promise.all([
       supabase
         .from("messages")
         .select("id, content, created_at, read_at, sender_id")
@@ -53,6 +53,12 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
         .select("id, name, email, created_at")
         .order("created_at", { ascending: false })
         .limit(5),
+      supabase
+        .from("contact_replies")
+        .select("id, message, created_at, sender, contact_request_id, contact_requests(name)")
+        .eq("sender", "prospect")
+        .order("created_at", { ascending: false })
+        .limit(10),
     ]);
 
     const items: Notification[] = [];
