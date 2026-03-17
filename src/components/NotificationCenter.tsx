@@ -10,7 +10,7 @@ import { fr } from "date-fns/locale";
 
 interface Notification {
   id: string;
-  type: "message" | "booking" | "contact" | "signup";
+  type: "message" | "booking" | "contact" | "signup" | "contact_reply";
   title: string;
   description: string;
   date: string;
