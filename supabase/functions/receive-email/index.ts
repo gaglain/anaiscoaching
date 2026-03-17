@@ -44,14 +44,30 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const resend = new Resend(resendApiKey);
-    const { data: emailData, error: resendError } = await resend.emails.receiving.get(emailId);
+    let emailData: { text?: string | null; html?: string | null } | null = null;
+    let lastResendError: unknown = null;
 
-    if (resendError || !emailData) {
-      console.error("Failed to retrieve received email from Resend:", resendError);
-      throw new Error(resendError?.message || "Failed to fetch inbound email body");
+    for (const delayMs of [0, 750, 1500, 3000]) {
+      if (delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
+      const { data: receivedEmail, error: resendError } = await resend.emails.receiving.get(emailId);
+
+      if (receivedEmail) {
+        emailData = receivedEmail;
+        console.log("Fetched inbound email content for:", emailId, "after delay", delayMs);
+        break;
+      }
+
+      lastResendError = resendError;
+      console.warn("Retrying inbound email fetch:", JSON.stringify({ emailId, delayMs, resendError }));
     }
 
-    console.log("Fetched inbound email content for:", emailId);
+    if (!emailData) {
+      console.error("Failed to retrieve received email from Resend after retries:", lastResendError);
+      throw new Error("Inbound email content not yet available");
+    }
 
     const textBody = emailData.text || emailData.html || "";
 
