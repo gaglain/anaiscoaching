@@ -727,7 +727,7 @@ export function AdminClients() {
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Écrivez votre réponse..."
-                  rows={5}
+                  rows={3}
                   className="border-border focus:border-secondary"
                 />
               </div>
