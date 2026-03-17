@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Bell, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,13 +21,34 @@ interface NotificationCenterProps {
   onNavigate?: (tab: string) => void;
 }
 
+const READ_KEY = "notifications-read-ids";
+
+function getReadIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(READ_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function addReadId(key: string) {
+  const ids = getReadIds();
+  ids.add(key);
+  // Keep only last 200
+  const arr = [...ids].slice(-200);
+  localStorage.setItem(READ_KEY, JSON.stringify(arr));
+}
+
 export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
+
+    const readIds = getReadIds();
 
     const [messagesRes, bookingsRes, contactsRes, signupsRes, repliesRes] = await Promise.all([
       supabase
@@ -71,7 +92,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
           title: "Nouveau message",
           description: m.content.length > 60 ? m.content.slice(0, 60) + "…" : m.content,
           date: m.created_at,
-          read: false,
+          read: readIds.has(`message-${m.id}`),
         });
       });
     }
@@ -105,25 +126,24 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
     }
 
     if (repliesRes.data) {
-      // Show prospect replies from last 7 days
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       repliesRes.data
         .filter((r) => r.created_at > weekAgo)
         .forEach((r) => {
           const contactName = (r as any).contact_requests?.name || "Un prospect";
+          const key = `reply-${r.id}`;
           items.push({
             id: r.id,
             type: "contact_reply",
             title: `Réponse de ${contactName}`,
             description: r.message.length > 60 ? r.message.slice(0, 60) + "…" : r.message,
             date: r.created_at,
-            read: false,
+            read: readIds.has(key),
           });
         });
     }
 
     if (signupsRes.data) {
-      // Only show signups from last 7 days
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       signupsRes.data
         .filter((p) => p.created_at > weekAgo && p.id !== user.id)
@@ -134,14 +154,14 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
             title: "Nouvelle inscription",
             description: p.name || p.email || "",
             date: p.created_at,
-            read: true,
+            read: readIds.has(`signup-${p.id}`),
           });
         });
     }
 
     items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setNotifications(items);
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchNotifications();
@@ -158,30 +178,41 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, fetchNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleClick = async (n: Notification) => {
-    // Mark as read based on type
+  const markOneAsRead = async (n: Notification, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+
     if (n.type === "message") {
       await supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("id", n.id);
     } else if (n.type === "contact") {
       await supabase.from("contact_requests").update({ read: true }).eq("id", n.id);
+    } else {
+      // For contact_reply, signup — use localStorage
+      const key = n.type === "contact_reply" ? `reply-${n.id}` : `signup-${n.id}`;
+      addReadId(key);
     }
-    
-    fetchNotifications();
+
+    // Optimistic update
+    setNotifications((prev) =>
+      prev.map((item) => (item.id === n.id && item.type === n.type ? { ...item, read: true } : item))
+    );
+  };
+
+  const handleClick = async (n: Notification) => {
+    if (!n.read) {
+      await markOneAsRead(n);
+    }
+
     setOpen(false);
-    
+
     if (n.type === "message" && onNavigate) {
       onNavigate("messages");
     } else if (n.type === "booking" && onNavigate) {
       onNavigate("bookings");
-    } else if (n.type === "contact" && onNavigate) {
-      onNavigate("clients");
-    } else if (n.type === "contact_reply" && onNavigate) {
-      onNavigate("clients");
-    } else if (n.type === "signup" && onNavigate) {
+    } else if ((n.type === "contact" || n.type === "contact_reply" || n.type === "signup") && onNavigate) {
       onNavigate("clients");
     }
   };
@@ -192,7 +223,17 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       supabase.from("messages").update({ read_at: new Date().toISOString() }).eq("receiver_id", user.id).is("read_at", null),
       supabase.from("contact_requests").update({ read: true }).eq("read", false),
     ]);
-    fetchNotifications();
+
+    // Mark local ones
+    notifications.forEach((n) => {
+      if (!n.read) {
+        if (n.type === "contact_reply") addReadId(`reply-${n.id}`);
+        if (n.type === "signup") addReadId(`signup-${n.id}`);
+        if (n.type === "message") addReadId(`message-${n.id}`);
+      }
+    });
+
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   return (
@@ -239,9 +280,20 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                       </p>
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{n.description}</p>
                     </div>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
-                      {formatDistanceToNow(new Date(n.date), { addSuffix: true, locale: fr })}
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
+                        {formatDistanceToNow(new Date(n.date), { addSuffix: true, locale: fr })}
+                      </span>
+                      {!n.read && (
+                        <button
+                          onClick={(e) => markOneAsRead(n, e)}
+                          className="p-0.5 rounded hover:bg-secondary/20 text-secondary transition-colors"
+                          title="Marquer comme lu"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
