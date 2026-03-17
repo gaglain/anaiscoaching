@@ -696,7 +696,7 @@ export function AdminClients() {
               {replyHistory.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">Historique des échanges :</p>
-                  <div className="max-h-60 overflow-y-auto space-y-2">
+                  <div className="max-h-48 sm:max-h-60 overflow-y-auto space-y-2">
                     {replyHistory.map((reply) => {
                       const isProspect = reply.sender === "prospect";
                       return (
