@@ -1,8 +1,28 @@
 import { supabase } from "@/integrations/supabase/client";
 
-// VAPID public key - you need to generate this
-// Generate with: npx web-push generate-vapid-keys
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
+let cachedVapidKey: string | null = null;
+
+async function getVapidPublicKey(): Promise<string> {
+  // Try client-side env first
+  const envKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+  if (envKey) return envKey;
+
+  // Use cache
+  if (cachedVapidKey) return cachedVapidKey;
+
+  // Fetch from backend
+  try {
+    const { data, error } = await supabase.functions.invoke('get-vapid-key');
+    if (!error && data?.publicKey) {
+      cachedVapidKey = data.publicKey;
+      return data.publicKey;
+    }
+  } catch (e) {
+    console.error('Failed to fetch VAPID key:', e);
+  }
+
+  return '';
+}
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -26,7 +46,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    // Wait for the VitePWA-registered service worker to be ready
     const registration = await navigator.serviceWorker.ready;
     console.log('Service Worker ready:', registration);
     return registration;
@@ -50,26 +69,26 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 export async function subscribeToPushNotifications(
   userId: string
 ): Promise<boolean> {
+  const VAPID_PUBLIC_KEY = await getVapidPublicKey();
+
   if (!VAPID_PUBLIC_KEY) {
-    console.warn('VAPID public key not configured');
+    console.warn('VAPID public key not available');
     return false;
   }
 
   try {
     const registration = await navigator.serviceWorker.ready;
     
-    // Check if already subscribed
-    let subscription = await (registration as any).pushManager.getSubscription();
+    let subscription = await registration.pushManager.getSubscription();
     
     if (!subscription) {
       const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-      subscription = await (registration as any).pushManager.subscribe({
+      subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey.buffer as ArrayBuffer,
       });
     }
 
-    // Save subscription to database
     const subscriptionJSON = subscription.toJSON();
     
     const { error } = await supabase.from('push_subscriptions').upsert(
@@ -102,12 +121,11 @@ export async function unsubscribeFromPushNotifications(
 ): Promise<boolean> {
   try {
     const registration = await navigator.serviceWorker.ready;
-    const subscription = await (registration as any).pushManager.getSubscription();
+    const subscription = await registration.pushManager.getSubscription();
     
     if (subscription) {
       await subscription.unsubscribe();
       
-      // Remove from database
       await supabase
         .from('push_subscriptions')
         .delete()
@@ -140,7 +158,7 @@ export async function getPushNotificationStatus(): Promise<{
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    const subscription = await (registration as any).pushManager.getSubscription();
+    const subscription = await registration.pushManager.getSubscription();
     subscribed = !!subscription;
   } catch {
     // Ignore errors
