@@ -672,7 +672,7 @@ export function AdminClients() {
 
       {/* Reply Dialog */}
       <Dialog open={replyDialog.open} onOpenChange={(open) => !open && setReplyDialog({ open: false, contact: null })}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Répondre à {replyDialog.contact?.name}</DialogTitle>
             <DialogDescription>
