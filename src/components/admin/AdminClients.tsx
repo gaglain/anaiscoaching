@@ -733,7 +733,7 @@ export function AdminClients() {
               </div>
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setReplyDialog({ open: false, contact: null })}>
               Annuler
             </Button>

@@ -179,6 +179,8 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       onNavigate("bookings");
     } else if (n.type === "contact" && onNavigate) {
       onNavigate("clients");
+    } else if (n.type === "contact_reply" && onNavigate) {
+      onNavigate("clients");
     } else if (n.type === "signup" && onNavigate) {
       onNavigate("clients");
     }
