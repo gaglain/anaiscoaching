@@ -696,22 +696,22 @@ export function AdminClients() {
               {replyHistory.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">Historique des échanges :</p>
-                  <div className="max-h-48 sm:max-h-60 overflow-y-auto space-y-2">
+                  <div className="max-h-48 sm:max-h-60 overflow-y-auto space-y-2 overflow-x-hidden">
                     {replyHistory.map((reply) => {
                       const isProspect = reply.sender === "prospect";
                       return (
                         <div
                           key={reply.id}
-                          className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm border ${
+                          className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm border overflow-hidden ${
                             isProspect
-                              ? "bg-accent/30 border-accent/40 mr-2 sm:mr-8"
-                              : "bg-secondary/10 border-secondary/20 ml-2 sm:ml-8"
+                              ? "bg-accent/30 border-accent/40 mr-4 sm:mr-8"
+                              : "bg-secondary/10 border-secondary/20 ml-4 sm:ml-8"
                           }`}
                         >
                           <p className="text-[10px] font-semibold mb-1">
                             {isProspect ? `📩 ${replyDialog.contact?.name}` : "📤 Anaïs (vous)"}
                           </p>
-                          <p className="text-foreground whitespace-pre-line break-words">{reply.message}</p>
+                          <p className="text-foreground whitespace-pre-line break-words overflow-wrap-anywhere">{reply.message}</p>
                           <p className="text-[10px] text-muted-foreground mt-1">
                             {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                           </p>
