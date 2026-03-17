@@ -104,6 +104,24 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
       });
     }
 
+    if (repliesRes.data) {
+      // Show prospect replies from last 7 days
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      repliesRes.data
+        .filter((r) => r.created_at > weekAgo)
+        .forEach((r) => {
+          const contactName = (r as any).contact_requests?.name || "Un prospect";
+          items.push({
+            id: r.id,
+            type: "contact_reply",
+            title: `Réponse de ${contactName}`,
+            description: r.message.length > 60 ? r.message.slice(0, 60) + "…" : r.message,
+            date: r.created_at,
+            read: false,
+          });
+        });
+    }
+
     if (signupsRes.data) {
       // Only show signups from last 7 days
       const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
