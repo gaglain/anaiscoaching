@@ -270,9 +270,9 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
               {notifications.map((n) => (
                 <div
                   key={`${n.type}-${n.id}`}
-                  className={`w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors ${!n.read ? "bg-accent/20" : ""}`}
+                  className={`w-full px-4 py-3 hover:bg-accent/50 transition-colors ${!n.read ? "bg-accent/20" : ""}`}
                 >
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-3">
                     <button
                       onClick={() => handleClick(n)}
                       className="flex-1 min-w-0 text-left"
@@ -280,7 +280,7 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                       <p className={`text-sm ${!n.read ? "font-semibold text-foreground" : "text-foreground"}`}>
                         {n.title}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{n.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.description}</p>
                       <p className="text-[10px] text-muted-foreground mt-1">
                         {formatDistanceToNow(new Date(n.date), { addSuffix: true, locale: fr })}
                       </p>
@@ -288,10 +288,10 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
                     {!n.read && (
                       <button
                         onClick={(e) => markOneAsRead(n, e)}
-                        className="shrink-0 mt-1 p-1.5 rounded-full bg-secondary/10 hover:bg-secondary/25 text-secondary transition-colors"
+                        className="shrink-0 mt-0.5 rounded-full border border-secondary/30 bg-secondary/10 px-2 py-1 text-[11px] font-medium text-secondary hover:bg-secondary/20 transition-colors"
                         title="Marquer comme lu"
                       >
-                        <Check className="h-4 w-4" />
+                        Lu
                       </button>
                     )}
                   </div>

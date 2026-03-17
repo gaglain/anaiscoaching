@@ -672,47 +672,47 @@ export function AdminClients() {
 
       {/* Reply Dialog */}
       <Dialog open={replyDialog.open} onOpenChange={(open) => !open && setReplyDialog({ open: false, contact: null })}>
-        <DialogContent className="sm:max-w-lg w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader className="pr-6">
-            <DialogTitle className="text-base sm:text-lg break-words">Répondre à {replyDialog.contact?.name}</DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm break-all">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
+          <DialogHeader className="pr-10 text-left">
+            <DialogTitle className="text-base sm:text-lg leading-tight break-words text-left">Répondre à {replyDialog.contact?.name}</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm break-all text-left">
               Un email sera envoyé à {replyDialog.contact?.email}
             </DialogDescription>
           </DialogHeader>
           {replyDialog.contact && (
-            <div className="space-y-3">
-              <div className="bg-muted/50 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm space-y-1">
+            <div className="space-y-3 overflow-x-hidden">
+              <div className="bg-muted/50 p-2.5 sm:p-3 rounded-lg text-xs sm:text-sm space-y-1 overflow-hidden">
                 <p className="font-medium text-foreground text-xs mb-1">Message initial :</p>
                 {replyDialog.contact.session_type && (
-                  <p className="text-muted-foreground">Type : {replyDialog.contact.session_type}</p>
+                  <p className="text-muted-foreground break-words">Type : {replyDialog.contact.session_type}</p>
                 )}
                 {replyDialog.contact.goal && (
-                  <p className="text-muted-foreground">Objectif : {replyDialog.contact.goal}</p>
+                  <p className="text-muted-foreground break-words">Objectif : {replyDialog.contact.goal}</p>
                 )}
                 {replyDialog.contact.message && (
                   <p className="text-muted-foreground italic break-words">"{replyDialog.contact.message}"</p>
                 )}
               </div>
               {replyHistory.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 overflow-x-hidden">
                   <p className="text-xs font-medium text-muted-foreground">Historique des échanges :</p>
-                  <div className="max-h-48 sm:max-h-60 overflow-y-auto space-y-2 overflow-x-hidden">
+                  <div className="max-h-48 sm:max-h-60 overflow-y-auto overflow-x-hidden space-y-2 pr-1">
                     {replyHistory.map((reply) => {
                       const isProspect = reply.sender === "prospect";
                       return (
                         <div
                           key={reply.id}
-                          className={`p-2 sm:p-3 rounded-lg text-xs sm:text-sm border overflow-hidden ${
+                          className={`w-full p-2 sm:p-3 rounded-lg text-xs sm:text-sm border overflow-hidden ${
                             isProspect
-                              ? "bg-accent/30 border-accent/40 mr-4 sm:mr-8"
-                              : "bg-secondary/10 border-secondary/20 ml-4 sm:ml-8"
+                              ? "bg-accent/30 border-accent/40"
+                              : "bg-secondary/10 border-secondary/20"
                           }`}
                         >
-                          <p className="text-[10px] font-semibold mb-1">
+                          <p className="text-[10px] font-semibold mb-1 break-words">
                             {isProspect ? `📩 ${replyDialog.contact?.name}` : "📤 Anaïs (vous)"}
                           </p>
-                          <p className="text-foreground whitespace-pre-line break-words overflow-wrap-anywhere">{reply.message}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">
+                          <p className="text-foreground whitespace-pre-line break-words">{reply.message}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1 break-words">
                             {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                           </p>
                         </div>
@@ -728,7 +728,7 @@ export function AdminClients() {
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Écrivez votre réponse..."
                   rows={3}
-                  className="border-border focus:border-secondary text-sm"
+                  className="border-border focus:border-secondary text-sm w-full"
                 />
               </div>
             </div>
