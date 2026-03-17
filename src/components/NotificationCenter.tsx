@@ -268,34 +268,34 @@ export function NotificationCenter({ onNavigate }: NotificationCenterProps) {
           ) : (
             <div className="divide-y divide-border">
               {notifications.map((n) => (
-                <button
+                <div
                   key={`${n.type}-${n.id}`}
-                  onClick={() => handleClick(n)}
                   className={`w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors ${!n.read ? "bg-accent/20" : ""}`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-2">
+                    <button
+                      onClick={() => handleClick(n)}
+                      className="flex-1 min-w-0 text-left"
+                    >
                       <p className={`text-sm ${!n.read ? "font-semibold text-foreground" : "text-foreground"}`}>
                         {n.title}
                       </p>
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{n.description}</p>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
+                      <p className="text-[10px] text-muted-foreground mt-1">
                         {formatDistanceToNow(new Date(n.date), { addSuffix: true, locale: fr })}
-                      </span>
-                      {!n.read && (
-                        <button
-                          onClick={(e) => markOneAsRead(n, e)}
-                          className="p-0.5 rounded hover:bg-secondary/20 text-secondary transition-colors"
-                          title="Marquer comme lu"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
+                      </p>
+                    </button>
+                    {!n.read && (
+                      <button
+                        onClick={(e) => markOneAsRead(n, e)}
+                        className="shrink-0 mt-1 p-1.5 rounded-full bg-secondary/10 hover:bg-secondary/25 text-secondary transition-colors"
+                        title="Marquer comme lu"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
