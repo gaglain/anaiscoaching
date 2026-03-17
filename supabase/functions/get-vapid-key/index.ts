@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,17 +11,41 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+  try {
+    // Try env secret first, then fall back to app_settings table
+    let vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
 
-  if (!vapidPublicKey) {
+    if (!vapidPublicKey || vapidPublicKey.length < 20) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      const { data } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'VAPID_PUBLIC_KEY')
+        .single();
+
+      if (data?.value) {
+        vapidPublicKey = data.value;
+      }
+    }
+
+    if (!vapidPublicKey) {
+      return new Response(
+        JSON.stringify({ error: 'VAPID key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ error: 'VAPID key not configured' }),
+      JSON.stringify({ publicKey: vapidPublicKey }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-
-  return new Response(
-    JSON.stringify({ publicKey: vapidPublicKey }),
-    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  );
 });
