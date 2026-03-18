@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
+import { useAppBadge } from "@/hooks/useAppBadge";
 import { ThemeProvider } from "next-themes";
 import Index from "./pages/Index";
 
@@ -30,6 +31,11 @@ const PageLoader = () => (
   </div>
 );
 
+function AppBadgeSync() {
+  useAppBadge();
+  return null;
+}
+
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
     <QueryClientProvider client={queryClient}>
@@ -38,6 +44,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <NotificationPrompt />
+        <AppBadgeSync />
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>

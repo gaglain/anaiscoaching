@@ -48,7 +48,15 @@ self.addEventListener('push', (event) => {
   } as any;
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Nouveau message', options)
+    (async () => {
+      await self.registration.showNotification(data.title || 'Nouveau message', options);
+      // Set app badge
+      if ('setAppBadge' in self.navigator) {
+        try {
+          await (self.navigator as any).setAppBadge(data.badge_count || 1);
+        } catch {}
+      }
+    })()
   );
 });
 
