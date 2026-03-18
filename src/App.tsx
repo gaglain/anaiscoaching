@@ -31,6 +31,11 @@ const PageLoader = () => (
   </div>
 );
 
+function AppBadgeSync() {
+  useAppBadge();
+  return null;
+}
+
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
     <QueryClientProvider client={queryClient}>
@@ -39,6 +44,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <NotificationPrompt />
+        <AppBadgeSync />
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
