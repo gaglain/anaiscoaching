@@ -2,12 +2,25 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 
+const READ_KEY = "notifications-read-ids";
+
+function getReadIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(READ_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
 export function useAppBadge() {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
 
   const fetchCount = useCallback(async () => {
     if (!user) { setCount(0); return; }
+
+    const readIds = getReadIds();
 
     const [messagesRes, contactsRes, repliesRes] = await Promise.all([
       supabase
@@ -21,15 +34,19 @@ export function useAppBadge() {
         .eq("read", false),
       supabase
         .from("contact_replies")
-        .select("*", { count: "exact", head: true })
+        .select("id")
         .eq("sender", "prospect")
         .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
     ]);
 
+    const unreadReplies = (repliesRes.data || []).filter(
+      (r) => !readIds.has(`reply-${r.id}`)
+    ).length;
+
     const total =
       (messagesRes.count || 0) +
       (contactsRes.count || 0) +
-      (repliesRes.count || 0);
+      unreadReplies;
 
     setCount(total);
   }, [user]);
@@ -44,7 +61,20 @@ export function useAppBadge() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "contact_replies" }, fetchCount)
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    // Also listen for localStorage changes (when NotificationCenter marks as read)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === READ_KEY) fetchCount();
+    };
+    window.addEventListener("storage", handleStorage);
+
+    // Poll periodically to catch same-tab localStorage changes
+    const interval = setInterval(fetchCount, 10000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("storage", handleStorage);
+      clearInterval(interval);
+    };
   }, [user, fetchCount]);
 
   useEffect(() => {

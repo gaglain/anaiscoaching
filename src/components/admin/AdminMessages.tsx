@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Send, Loader2, User, Plus } from "lucide-react";
+import { MessageSquare, Send, Loader2, User, Plus, ArrowLeft } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +33,7 @@ export function AdminMessages() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const [chatDialogOpen, setChatDialogOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const selectedClientRef = useRef<Profile | null>(null);
   const [isNewConvoOpen, setIsNewConvoOpen] = useState(false);
@@ -44,16 +45,11 @@ export function AdminMessages() {
       fetchConversations();
       fetchAllClients();
 
-      // Subscribe to new messages
       const channel = supabase
         .channel("admin-messages")
         .on(
           "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-          },
+          { event: "INSERT", schema: "public", table: "messages" },
           () => {
             fetchConversations();
             if (selectedClientRef.current) {
@@ -84,7 +80,6 @@ export function AdminMessages() {
     if (!user) return;
 
     try {
-      // Get all clients who have exchanged messages with admin
       const { data: allMessages } = await supabase
         .from("messages")
         .select("*")
@@ -97,14 +92,12 @@ export function AdminMessages() {
         return;
       }
 
-      // Group by client
       const clientIds = new Set<string>();
       allMessages.forEach((msg) => {
         const clientId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
         clientIds.add(clientId);
       });
 
-      // Fetch client profiles
       const { data: profiles } = await supabase
         .from("profiles")
         .select("*")
@@ -116,7 +109,6 @@ export function AdminMessages() {
         return;
       }
 
-      // Build conversations
       const convos: Conversation[] = profiles.map((profile) => {
         const clientMessages = allMessages.filter(
           (msg) => msg.sender_id === profile.id || msg.receiver_id === profile.id
@@ -126,14 +118,9 @@ export function AdminMessages() {
           (msg) => msg.receiver_id === user.id && !msg.read_at
         ).length;
 
-        return {
-          client: profile,
-          lastMessage,
-          unreadCount,
-        };
+        return { client: profile, lastMessage, unreadCount };
       });
 
-      // Sort by last message date
       convos.sort(
         (a, b) =>
           new Date(b.lastMessage.created_at).getTime() -
@@ -163,7 +150,6 @@ export function AdminMessages() {
       if (error) throw error;
       setMessages(data || []);
 
-      // Mark messages as read
       await supabase
         .from("messages")
         .update({ read_at: new Date().toISOString() })
@@ -181,6 +167,7 @@ export function AdminMessages() {
     setSelectedClient(client);
     selectedClientRef.current = client;
     fetchMessages(client.id);
+    setChatDialogOpen(true);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -202,7 +189,6 @@ export function AdminMessages() {
 
       if (error) throw error;
 
-      // Get client profile with preferences
       const { data: clientProfile } = await supabase
         .from("profiles")
         .select("email, notification_preferences")
@@ -211,7 +197,6 @@ export function AdminMessages() {
 
       const prefs = (clientProfile?.notification_preferences as any) || { email: true, push: true };
 
-      // Send email if client has email notifications enabled
       if (clientProfile?.email && prefs.email) {
         sendEmail({
           type: "new_message",
@@ -223,7 +208,6 @@ export function AdminMessages() {
         });
       }
 
-      // Send push notification if client has push enabled
       if (prefs.push) {
         try {
           await supabase.functions.invoke('send-push', {
@@ -253,6 +237,87 @@ export function AdminMessages() {
     }
   };
 
+  const handleCloseChat = () => {
+    setChatDialogOpen(false);
+    setSelectedClient(null);
+    selectedClientRef.current = null;
+  };
+
+  const renderChatContent = () => (
+    <>
+      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        {messages.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
+              <MessageSquare className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-muted-foreground">
+              Aucun message. Démarrez la conversation !
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.map((message) => {
+              const isOwn = message.sender_id === user?.id;
+              return (
+                <div
+                  key={message.id}
+                  className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                      isOwn
+                        ? "bg-secondary text-secondary-foreground rounded-br-md"
+                        : "bg-muted text-foreground rounded-bl-md"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <p
+                      className={`text-xs mt-1 ${
+                        isOwn ? "text-secondary-foreground/70" : "text-muted-foreground"
+                      }`}
+                    >
+                      {format(new Date(message.created_at), "d MMM HH:mm", { locale: fr })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </ScrollArea>
+
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-border/50 bg-card">
+        <div className="flex gap-2">
+          <Textarea
+            placeholder="Écrivez votre message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            className="min-h-[60px] resize-none border-border/50 focus:border-secondary"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+              }
+            }}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="h-auto bg-secondary hover:bg-secondary/90 shadow-md"
+            disabled={isSending || !newMessage.trim()}
+          >
+            {isSending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </form>
+    </>
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -262,9 +327,9 @@ export function AdminMessages() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3 h-[600px]">
-      {/* Conversations List */}
-      <Card className="lg:col-span-1 border-secondary/20">
+    <>
+      {/* Conversation List */}
+      <Card className="border-secondary/20">
         <CardHeader className="bg-gradient-to-r from-secondary/5 to-transparent">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -282,7 +347,7 @@ export function AdminMessages() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="h-[480px]">
+          <ScrollArea className="max-h-[500px]">
             {conversations.length === 0 ? (
               <div className="text-center py-8 px-4">
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/10 mb-4">
@@ -298,9 +363,7 @@ export function AdminMessages() {
                   <button
                     key={convo.client.id}
                     onClick={() => handleSelectClient(convo.client)}
-                    className={`w-full p-4 text-left hover:bg-accent/50 transition-colors ${
-                      selectedClient?.id === convo.client.id ? "bg-secondary/10 border-l-2 border-secondary" : ""
-                    }`}
+                    className="w-full p-4 text-left hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-foreground">{convo.client.name}</span>
@@ -324,113 +387,24 @@ export function AdminMessages() {
         </CardContent>
       </Card>
 
-      {/* Chat Area */}
-      <Card className="lg:col-span-2 flex flex-col border-primary/20">
-        <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
-          {selectedClient ? (
-            <>
-              <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <User className="h-5 w-5 text-primary" />
-                </div>
-                {selectedClient.name}
-              </CardTitle>
-              <CardDescription>
-                {selectedClient.phone || "Pas de téléphone"}
-              </CardDescription>
-            </>
-          ) : (
-            <CardTitle className="text-muted-foreground">
-              Sélectionnez une conversation
-            </CardTitle>
-          )}
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-          {!selectedClient ? (
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                <MessageSquare className="h-8 w-8 text-primary" />
-              </div>
-              <p className="text-muted-foreground">
-                Cliquez sur un client pour voir la conversation
-              </p>
+      {/* Chat Dialog */}
+      <Dialog open={chatDialogOpen} onOpenChange={(open) => { if (!open) handleCloseChat(); }}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl h-[80vh] max-h-[80vh] flex flex-col p-0 gap-0">
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <User className="h-5 w-5 text-primary" />
             </div>
-          ) : (
-            <>
-              <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                {messages.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
-                      <MessageSquare className="h-6 w-6 text-primary" />
-                    </div>
-                    <p className="text-muted-foreground">
-                      Aucun message. Démarrez la conversation !
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.map((message) => {
-                      const isOwn = message.sender_id === user?.id;
-                      return (
-                        <div
-                          key={message.id}
-                          className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                              isOwn
-                                ? "bg-secondary text-secondary-foreground rounded-br-md"
-                                : "bg-muted text-foreground rounded-bl-md"
-                            }`}
-                          >
-                            <p className="whitespace-pre-wrap">{message.content}</p>
-                            <p
-                              className={`text-xs mt-1 ${
-                                isOwn ? "text-secondary-foreground/70" : "text-muted-foreground"
-                              }`}
-                            >
-                              {format(new Date(message.created_at), "d MMM HH:mm", { locale: fr })}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </ScrollArea>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground truncate">{selectedClient?.name}</h3>
+              <p className="text-xs text-muted-foreground">{selectedClient?.phone || "Pas de téléphone"}</p>
+            </div>
+          </div>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {renderChatContent()}
+          </div>
+        </DialogContent>
+      </Dialog>
 
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-border/50 bg-card">
-                <div className="flex gap-2">
-                  <Textarea
-                    placeholder="Écrivez votre message..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    className="min-h-[60px] resize-none border-border/50 focus:border-secondary"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage(e);
-                      }
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    size="icon"
-                    className="h-auto bg-secondary hover:bg-secondary/90 shadow-md"
-                    disabled={isSending || !newMessage.trim()}
-                  >
-                    {isSending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </>
-          )}
-        </CardContent>
-      </Card>
       {/* New Conversation Dialog */}
       <Dialog open={isNewConvoOpen} onOpenChange={setIsNewConvoOpen}>
         <DialogContent className="sm:max-w-md">
@@ -470,6 +444,6 @@ export function AdminMessages() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

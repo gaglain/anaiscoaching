@@ -7,7 +7,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock, Reply, Send } from "lucide-react";
+import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock, Reply, Send, MessageSquare } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/useCategories";
@@ -26,6 +28,7 @@ interface ClientWithStats extends Profile {
 }
 
 export function AdminClients() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const { categories: clientCategories } = useCategories("client");
   const [clients, setClients] = useState<ClientWithStats[]>([]);
@@ -53,6 +56,10 @@ export function AdminClients() {
   const [replyMessage, setReplyMessage] = useState("");
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string; sender: string }[]>([]);
+
+  // Conversation history for client detail
+  const [clientMessages, setClientMessages] = useState<Tables<"messages">[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
   useEffect(() => {
     fetchClients();
@@ -184,7 +191,7 @@ export function AdminClients() {
     }
   };
 
-  const openClientDialog = (client: ClientWithStats) => {
+  const openClientDialog = async (client: ClientWithStats) => {
     setSelectedClient(client);
     setEditLevel(client.level || "beginner");
     setEditGoals(client.goals || "");
@@ -192,6 +199,27 @@ export function AdminClients() {
     setEditTags((client as any).tags || []);
     setNewTag("");
     setIsDialogOpen(true);
+    fetchClientMessages(client.id);
+  };
+
+  const fetchClientMessages = async (clientId: string) => {
+    if (!user) return;
+    setIsLoadingMessages(true);
+    try {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${clientId}),and(sender_id.eq.${clientId},receiver_id.eq.${user.id})`
+        )
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setClientMessages(data || []);
+    } catch (error) {
+      console.error("Error fetching client messages:", error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
   };
 
   const saveClientDetails = async () => {
@@ -490,7 +518,7 @@ export function AdminClients() {
 
       {/* Client Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
@@ -627,6 +655,49 @@ export function AdminClients() {
                   </Button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Conversation History */}
+          {selectedClient && (
+            <div className="space-y-2 border-t border-border/50 pt-4">
+              <Label className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-secondary" />
+                Historique des messages
+              </Label>
+              {isLoadingMessages ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : clientMessages.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-2">Aucun message échangé.</p>
+              ) : (
+                <ScrollArea className="max-h-48 rounded-lg border border-border/50">
+                  <div className="space-y-2 p-3">
+                    {clientMessages.map((msg) => {
+                      const isAdmin = msg.sender_id === user?.id;
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`p-2 rounded-lg text-xs ${
+                            isAdmin
+                              ? "bg-secondary/10 border border-secondary/20"
+                              : "bg-accent/30 border border-accent/40"
+                          }`}
+                        >
+                          <p className="text-[10px] font-semibold mb-0.5">
+                            {isAdmin ? "📤 Vous" : `📩 ${selectedClient.name}`}
+                          </p>
+                          <p className="text-foreground whitespace-pre-line break-words">{msg.content}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {format(new Date(msg.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
             </div>
           )}
 
