@@ -28,6 +28,7 @@ interface ClientWithStats extends Profile {
 }
 
 export function AdminClients() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const { categories: clientCategories } = useCategories("client");
   const [clients, setClients] = useState<ClientWithStats[]>([]);
