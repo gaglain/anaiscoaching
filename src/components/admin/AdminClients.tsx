@@ -57,6 +57,10 @@ export function AdminClients() {
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string; sender: string }[]>([]);
 
+  // Conversation history for client detail
+  const [clientMessages, setClientMessages] = useState<Tables<"messages">[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
   useEffect(() => {
     fetchClients();
     fetchContactRequests();
