@@ -191,7 +191,7 @@ export function AdminClients() {
     }
   };
 
-  const openClientDialog = (client: ClientWithStats) => {
+  const openClientDialog = async (client: ClientWithStats) => {
     setSelectedClient(client);
     setEditLevel(client.level || "beginner");
     setEditGoals(client.goals || "");
@@ -199,6 +199,27 @@ export function AdminClients() {
     setEditTags((client as any).tags || []);
     setNewTag("");
     setIsDialogOpen(true);
+    fetchClientMessages(client.id);
+  };
+
+  const fetchClientMessages = async (clientId: string) => {
+    if (!user) return;
+    setIsLoadingMessages(true);
+    try {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${clientId}),and(sender_id.eq.${clientId},receiver_id.eq.${user.id})`
+        )
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setClientMessages(data || []);
+    } catch (error) {
+      console.error("Error fetching client messages:", error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
   };
 
   const saveClientDetails = async () => {
