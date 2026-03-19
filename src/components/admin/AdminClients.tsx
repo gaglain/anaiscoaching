@@ -658,6 +658,49 @@ export function AdminClients() {
             </div>
           )}
 
+          {/* Conversation History */}
+          {selectedClient && (
+            <div className="space-y-2 border-t border-border/50 pt-4">
+              <Label className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-secondary" />
+                Historique des messages
+              </Label>
+              {isLoadingMessages ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : clientMessages.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-2">Aucun message échangé.</p>
+              ) : (
+                <ScrollArea className="max-h-48 rounded-lg border border-border/50">
+                  <div className="space-y-2 p-3">
+                    {clientMessages.map((msg) => {
+                      const isAdmin = msg.sender_id === user?.id;
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`p-2 rounded-lg text-xs ${
+                            isAdmin
+                              ? "bg-secondary/10 border border-secondary/20"
+                              : "bg-accent/30 border border-accent/40"
+                          }`}
+                        >
+                          <p className="text-[10px] font-semibold mb-0.5">
+                            {isAdmin ? "📤 Vous" : `📩 ${selectedClient.name}`}
+                          </p>
+                          <p className="text-foreground whitespace-pre-line break-words">{msg.content}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {format(new Date(msg.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+          )}
+
           <DialogFooter className="flex-row justify-between sm:justify-between">
             <Button
               variant="outline"
