@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MessageSquare, Send, Loader2, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,10 +15,18 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Message = Tables<"messages">;
 
+interface UnifiedMessage {
+  id: string;
+  content: string;
+  created_at: string;
+  isOwn: boolean;
+  source: "internal" | "email";
+}
+
 export function ClientMessages() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [unifiedMessages, setUnifiedMessages] = useState<UnifiedMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [newMessage, setNewMessage] = useState("");
@@ -30,12 +39,11 @@ export function ClientMessages() {
 
   useEffect(() => {
     if (user && adminId) {
-      fetchMessages();
+      fetchAllMessages();
       markMessagesAsRead();
-      
-      // Subscribe to new messages
+
       const channel = supabase
-        .channel("messages")
+        .channel("client-messages-unified")
         .on(
           "postgres_changes",
           {
@@ -44,9 +52,8 @@ export function ClientMessages() {
             table: "messages",
             filter: `receiver_id=eq.${user.id}`,
           },
-          (payload) => {
-            const newMsg = payload.new as Message;
-            setMessages((prev) => [...prev, newMsg]);
+          () => {
+            fetchAllMessages();
             markMessagesAsRead();
           }
         )
@@ -59,11 +66,10 @@ export function ClientMessages() {
   }, [user, adminId]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [unifiedMessages]);
 
   const fetchAdminId = async () => {
     try {
@@ -82,11 +88,12 @@ export function ClientMessages() {
     }
   };
 
-  const fetchMessages = async () => {
+  const fetchAllMessages = async () => {
     if (!user || !adminId) return;
 
     try {
-      const { data, error } = await supabase
+      // Fetch internal messages
+      const { data: internalMessages } = await supabase
         .from("messages")
         .select("*")
         .or(
@@ -94,8 +101,69 @@ export function ClientMessages() {
         )
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      setMessages(data || []);
+      // Fetch contact_requests matching user email to get pre-account email history
+      const userEmail = user.email;
+      let emailMessages: UnifiedMessage[] = [];
+
+      if (userEmail) {
+        const { data: contactRequests } = await supabase
+          .from("contact_requests")
+          .select("id, message, created_at, name, email")
+          .eq("email", userEmail);
+
+        if (contactRequests && contactRequests.length > 0) {
+          const requestIds = contactRequests.map((cr) => cr.id);
+
+          // Fetch replies for these contact requests
+          const { data: replies } = await supabase
+            .from("contact_replies")
+            .select("*")
+            .in("contact_request_id", requestIds)
+            .order("created_at", { ascending: true });
+
+          // Add the initial contact request messages
+          for (const cr of contactRequests) {
+            if (cr.message) {
+              emailMessages.push({
+                id: `cr-${cr.id}`,
+                content: cr.message,
+                created_at: cr.created_at,
+                isOwn: true,
+                source: "email",
+              });
+            }
+          }
+
+          // Add replies
+          if (replies) {
+            for (const reply of replies) {
+              emailMessages.push({
+                id: `reply-${reply.id}`,
+                content: reply.message,
+                created_at: reply.created_at,
+                isOwn: reply.sender === "prospect",
+                source: "email",
+              });
+            }
+          }
+        }
+      }
+
+      // Build unified internal messages
+      const internalUnified: UnifiedMessage[] = (internalMessages || []).map((msg) => ({
+        id: msg.id,
+        content: msg.content,
+        created_at: msg.created_at,
+        isOwn: msg.sender_id === user.id,
+        source: "internal" as const,
+      }));
+
+      // Merge and sort by date
+      const all = [...emailMessages, ...internalUnified].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+
+      setUnifiedMessages(all);
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {
@@ -136,14 +204,12 @@ export function ClientMessages() {
 
       if (error) throw error;
 
-      // Get client name for notification
       const { data: profile } = await supabase
         .from("profiles")
         .select("name")
         .eq("id", user.id)
         .single();
 
-      // Notify admin about new message (email)
       try {
         await notifyAdmin({
           type: "new_message",
@@ -156,21 +222,29 @@ export function ClientMessages() {
         console.error("Email notification error:", emailError);
       }
 
-      // Send push notification to admin
       try {
-        await supabase.functions.invoke('send-push', {
+        await supabase.functions.invoke("send-push", {
           body: {
             userId: adminId,
-            title: `Message de ${profile?.name || 'Client'}`,
+            title: `Message de ${profile?.name || "Client"}`,
             body: newMessage.trim().substring(0, 100),
-            url: '/admin?tab=messages',
+            url: "/admin?tab=messages",
           },
         });
       } catch (pushError) {
-        console.error('Push notification error:', pushError);
+        console.error("Push notification error:", pushError);
       }
 
-      setMessages((prev) => [...prev, data]);
+      setUnifiedMessages((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          content: data.content,
+          created_at: data.created_at,
+          isOwn: true,
+          source: "internal",
+        },
+      ]);
       setNewMessage("");
     } catch (error: any) {
       toast({
@@ -201,13 +275,12 @@ export function ClientMessages() {
           Messages avec Anaïs
         </CardTitle>
         <CardDescription>
-          Échangez directement avec votre coach
+          Échangez directement avec votre coach — historique email et messagerie inclus
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        {/* Messages Area */}
         <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-          {messages.length === 0 ? (
+          {unifiedMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                 <MessageSquare className="h-8 w-8 text-primary" />
@@ -221,37 +294,41 @@ export function ClientMessages() {
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => {
-                const isOwn = message.sender_id === user?.id;
-                return (
+              {unifiedMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isOwn ? "justify-end" : "justify-start"}`}
+                >
                   <div
-                    key={message.id}
-                    className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                      message.isOwn
+                        ? "bg-primary text-primary-foreground rounded-br-md"
+                        : "bg-muted text-foreground rounded-bl-md"
+                    }`}
                   >
-                    <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                        isOwn
-                          ? "bg-primary text-primary-foreground rounded-br-md"
-                          : "bg-muted text-foreground rounded-bl-md"
+                    {message.source === "email" && (
+                      <div className="flex items-center gap-1 mb-1">
+                        <Mail className="h-3 w-3 opacity-70" />
+                        <span className="text-[10px] opacity-70 uppercase tracking-wide">
+                          par email
+                        </span>
+                      </div>
+                    )}
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <p
+                      className={`text-xs mt-1 ${
+                        message.isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          isOwn ? "text-primary-foreground/70" : "text-muted-foreground"
-                        }`}
-                      >
-                        {format(new Date(message.created_at), "d MMM HH:mm", { locale: fr })}
-                      </p>
-                    </div>
+                      {format(new Date(message.created_at), "d MMM HH:mm", { locale: fr })}
+                    </p>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </ScrollArea>
 
-        {/* Message Input */}
         <form
           onSubmit={handleSendMessage}
           className="p-4 border-t border-border/50 bg-card"
