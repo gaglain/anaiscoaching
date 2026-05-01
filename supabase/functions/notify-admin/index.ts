@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-const ADMIN_EMAIL = "anais@coachsportif-rennes.fr";
+const ADMIN_EMAILS = ["anais@coachsportif-rennes.fr", "Anais.coaching@outlook.fr"];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -171,7 +171,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "App Coach Anaïs <noreply@coachsportif-rennes.fr>",
-      to: [ADMIN_EMAIL],
+      to: ADMIN_EMAILS,
       subject,
       html,
     });
