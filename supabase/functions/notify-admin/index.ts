@@ -171,7 +171,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "App Coach Anaïs <noreply@coachsportif-rennes.fr>",
-      to: [ADMIN_EMAIL],
+      to: ADMIN_EMAILS,
       subject,
       html,
     });
