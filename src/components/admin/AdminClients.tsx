@@ -59,11 +59,30 @@ export function AdminClients() {
   const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string; sender: string }[]>([]);
 
   // Email templates
-  type EmailTemplate = { id: string; title: string; content: string };
+  type EmailTemplate = { id: string; title: string; content: string; category: string };
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
   const [saveTemplateDialog, setSaveTemplateDialog] = useState(false);
   const [templateTitle, setTemplateTitle] = useState("");
+  const [templateCategory, setTemplateCategory] = useState("Général");
+  const [newTemplateCategory, setNewTemplateCategory] = useState("");
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState("all");
+  const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
+
+  const DEFAULT_TEMPLATE_CATEGORIES = ["Général", "Tarifs", "Prise de contact", "Relance", "Organisation", "Refus"];
+  const templateCategories = Array.from(
+    new Set([...DEFAULT_TEMPLATE_CATEGORIES, ...emailTemplates.map((t) => t.category || "Général")])
+  );
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const filteredTemplates = emailTemplates.filter((t) => {
+    const matchCat = templateCategoryFilter === "all" || (t.category || "Général") === templateCategoryFilter;
+    const q = normalize(templateSearch.trim());
+    const matchSearch =
+      !q || normalize(t.title).includes(q) || normalize(t.content).includes(q) || normalize(t.category || "").includes(q);
+    return matchCat && matchSearch;
+  });
 
   // Conversation history for client detail
   const [clientMessages, setClientMessages] = useState<Tables<"messages">[]>([]);
@@ -78,9 +97,10 @@ export function AdminClients() {
   const fetchEmailTemplates = async () => {
     const { data } = await supabase
       .from("email_templates")
-      .select("id, title, content")
+      .select("id, title, content, category")
+      .order("category", { ascending: true })
       .order("created_at", { ascending: false });
-    setEmailTemplates(data || []);
+    setEmailTemplates((data as EmailTemplate[]) || []);
   };
 
   const applyTemplate = (id: string) => {
@@ -88,21 +108,26 @@ export function AdminClients() {
     if (!tpl) return;
     const name = replyDialog.contact?.name?.split(" ")[0] || "";
     setReplyMessage(tpl.content.replace(/\{\{\s*prenom\s*\}\}|\{\{\s*nom\s*\}\}/gi, name));
+    setTemplatesPanelOpen(false);
   };
 
   const saveAsTemplate = async () => {
+    const category = (newTemplateCategory.trim() || templateCategory || "Général").trim();
     if (!templateTitle.trim() || !replyMessage.trim()) return;
     setIsSavingTemplate(true);
     try {
       const { error } = await supabase.from("email_templates").insert({
         title: templateTitle.trim(),
         content: replyMessage.trim(),
+        category,
         created_by: user?.id ?? null,
       });
       if (error) throw error;
-      toast({ title: "Modèle enregistré", description: templateTitle.trim() });
+      toast({ title: "Modèle enregistré", description: `${templateTitle.trim()} · ${category}` });
       setSaveTemplateDialog(false);
       setTemplateTitle("");
+      setNewTemplateCategory("");
+      setTemplateCategory("Général");
       fetchEmailTemplates();
     } catch (e: any) {
       toast({ title: "Erreur", description: "Impossible d'enregistrer le modèle.", variant: "destructive" });
@@ -115,6 +140,7 @@ export function AdminClients() {
     await supabase.from("email_templates").delete().eq("id", id);
     fetchEmailTemplates();
   };
+
 
 
   const fetchContactRequests = async () => {
