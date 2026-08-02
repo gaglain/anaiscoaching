@@ -114,7 +114,7 @@ export function AdminMessages() {
           const replies = (contactReplies || []).filter((r) => r.contact_request_id === cr.id);
           const lastReply = replies[0];
           const lastDate = lastReply ? lastReply.created_at : cr.created_at;
-          const lastContent = lastReply ? lastReply.message : (cr.message || "Demande de contact");
+          const lastContent = lastReply ? htmlToText(lastReply.message) : (cr.message || "Demande de contact");
           
           const existing = emailConvoMap.get(cr.email);
           if (!existing || new Date(lastDate) > new Date(existing.lastDate)) {
