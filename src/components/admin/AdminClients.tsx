@@ -58,6 +58,13 @@ export function AdminClients() {
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string; sender: string }[]>([]);
 
+  // Email templates
+  type EmailTemplate = { id: string; title: string; content: string };
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+  const [saveTemplateDialog, setSaveTemplateDialog] = useState(false);
+  const [templateTitle, setTemplateTitle] = useState("");
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
   // Conversation history for client detail
   const [clientMessages, setClientMessages] = useState<Tables<"messages">[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -65,7 +72,50 @@ export function AdminClients() {
   useEffect(() => {
     fetchClients();
     fetchContactRequests();
+    fetchEmailTemplates();
   }, []);
+
+  const fetchEmailTemplates = async () => {
+    const { data } = await supabase
+      .from("email_templates")
+      .select("id, title, content")
+      .order("created_at", { ascending: false });
+    setEmailTemplates(data || []);
+  };
+
+  const applyTemplate = (id: string) => {
+    const tpl = emailTemplates.find((t) => t.id === id);
+    if (!tpl) return;
+    const name = replyDialog.contact?.name?.split(" ")[0] || "";
+    setReplyMessage(tpl.content.replace(/\{\{\s*prenom\s*\}\}|\{\{\s*nom\s*\}\}/gi, name));
+  };
+
+  const saveAsTemplate = async () => {
+    if (!templateTitle.trim() || !replyMessage.trim()) return;
+    setIsSavingTemplate(true);
+    try {
+      const { error } = await supabase.from("email_templates").insert({
+        title: templateTitle.trim(),
+        content: replyMessage.trim(),
+        created_by: user?.id ?? null,
+      });
+      if (error) throw error;
+      toast({ title: "Modèle enregistré", description: templateTitle.trim() });
+      setSaveTemplateDialog(false);
+      setTemplateTitle("");
+      fetchEmailTemplates();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer le modèle.", variant: "destructive" });
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  const deleteTemplate = async (id: string) => {
+    await supabase.from("email_templates").delete().eq("id", id);
+    fetchEmailTemplates();
+  };
+
 
   const fetchContactRequests = async () => {
     try {
