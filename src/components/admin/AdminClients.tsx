@@ -1230,7 +1230,7 @@ export function AdminClients() {
             </div>
           </div>
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setEditTemplate(null)} className="w-full sm:w-auto">Annuler</Button>
+            <Button variant="outline" onClick={() => { setTemplateEditorOpen(false); setEditTemplate(null); }} className="w-full sm:w-auto">Annuler</Button>
             <Button
               onClick={updateTemplate}
               disabled={isUpdatingTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()}
