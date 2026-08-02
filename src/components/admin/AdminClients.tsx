@@ -17,6 +17,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportClientsToCSV, type ExportClient } from "@/lib/exportCsv";
 import { htmlToText } from "@/lib/htmlToText";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { isHtmlEmpty } from "@/lib/sanitizeHtml";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
@@ -88,7 +90,7 @@ export function AdminClients() {
     const matchCat = templateCategoryFilter === "all" || (t.category || "Général") === templateCategoryFilter;
     const q = normalize(templateSearch.trim());
     const matchSearch =
-      !q || normalize(t.title).includes(q) || normalize(t.content).includes(q) || normalize(t.category || "").includes(q);
+      !q || normalize(t.title).includes(q) || normalize(htmlToText(t.content)).includes(q) || normalize(t.category || "").includes(q);
     return matchCat && matchSearch;
   });
 
@@ -121,12 +123,12 @@ export function AdminClients() {
 
   const saveAsTemplate = async () => {
     const category = (newTemplateCategory.trim() || templateCategory || "Général").trim();
-    if (!templateTitle.trim() || !replyMessage.trim()) return;
+    if (!templateTitle.trim() || isHtmlEmpty(replyMessage)) return;
     setIsSavingTemplate(true);
     try {
       const { error } = await supabase.from("email_templates").insert({
         title: templateTitle.trim(),
-        content: replyMessage.trim(),
+        content: replyMessage,
         category,
         created_by: user?.id ?? null,
       });
@@ -168,7 +170,7 @@ export function AdminClients() {
   };
 
   const updateTemplate = async () => {
-    if (!editTemplateTitle.trim() || !editTemplateContent.trim()) return;
+    if (!editTemplateTitle.trim() || isHtmlEmpty(editTemplateContent)) return;
     const category = (editTemplateNewCategory.trim() || editTemplateCategory || "Général").trim();
     setIsUpdatingTemplate(true);
     try {
@@ -177,7 +179,7 @@ export function AdminClients() {
           .from("email_templates")
           .update({
             title: editTemplateTitle.trim(),
-            content: editTemplateContent.trim(),
+            content: editTemplateContent,
             category,
           })
           .eq("id", editTemplate.id);
@@ -186,7 +188,7 @@ export function AdminClients() {
       } else {
         const { error } = await supabase.from("email_templates").insert({
           title: editTemplateTitle.trim(),
-          content: editTemplateContent.trim(),
+          content: editTemplateContent,
           category,
           created_by: user?.id ?? null,
         });
@@ -240,7 +242,7 @@ export function AdminClients() {
   };
 
   const sendReply = async () => {
-    if (!replyDialog.contact || !replyMessage.trim()) return;
+    if (!replyDialog.contact || isHtmlEmpty(replyMessage)) return;
     setIsSendingReply(true);
     try {
       // Send email
@@ -250,7 +252,7 @@ export function AdminClients() {
           to: replyDialog.contact.email,
           data: {
             clientName: replyDialog.contact.name,
-            replyMessage: replyMessage.trim(),
+            replyMessage: replyMessage,
           },
         },
       });
@@ -259,7 +261,7 @@ export function AdminClients() {
       // Save reply to history
       await supabase.from("contact_replies").insert({
         contact_request_id: replyDialog.contact.id,
-        message: replyMessage.trim(),
+        message: replyMessage,
       });
 
       // Mark as read after replying
@@ -1003,7 +1005,7 @@ export function AdminClients() {
                                 </Badge>
                               </div>
                               <p className="text-[10px] text-muted-foreground line-clamp-2 break-words mt-0.5">
-                                {t.content}
+                                {htmlToText(t.content)}
                               </p>
                             </button>
                             <button
@@ -1029,12 +1031,12 @@ export function AdminClients() {
                   </div>
                 )}
 
-                <Textarea
+                <RichTextEditor
                   value={replyMessage}
-                  onChange={(e) => setReplyMessage(e.target.value)}
+                  onChange={setReplyMessage}
                   placeholder="Écrivez votre réponse..."
-                  rows={4}
-                  className="border-border focus:border-secondary text-sm w-full"
+                  minHeight={120}
+                  className="focus-within:border-secondary"
                 />
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -1042,7 +1044,7 @@ export function AdminClients() {
                     variant="outline"
                     size="sm"
                     className="text-xs"
-                    disabled={!replyMessage.trim()}
+                    disabled={isHtmlEmpty(replyMessage)}
                     onClick={() => setSaveTemplateDialog(true)}
                   >
                     <BookmarkPlus className="h-3.5 w-3.5 mr-1.5" />
@@ -1060,7 +1062,7 @@ export function AdminClients() {
             </Button>
             <Button
               onClick={sendReply}
-              disabled={isSendingReply || !replyMessage.trim()}
+              disabled={isSendingReply || isHtmlEmpty(replyMessage)}
               className="bg-secondary hover:bg-secondary/90 text-secondary-foreground w-full sm:w-auto"
             >
               {isSendingReply ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
@@ -1167,7 +1169,7 @@ export function AdminClients() {
                         <Badge variant="outline" className="text-[10px] font-normal">{t.category || "Général"}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3 break-words mt-1">
-                        {t.content}
+                        {htmlToText(t.content)}
                       </p>
                     </div>
                     <div className="flex flex-col gap-1 shrink-0">
@@ -1221,11 +1223,11 @@ export function AdminClients() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs sm:text-sm">Contenu</Label>
-              <Textarea
+              <RichTextEditor
                 value={editTemplateContent}
-                onChange={(e) => setEditTemplateContent(e.target.value)}
-                rows={8}
-                className="text-sm"
+                onChange={setEditTemplateContent}
+                placeholder="Contenu du modèle..."
+                minHeight={160}
               />
             </div>
           </div>
@@ -1233,7 +1235,7 @@ export function AdminClients() {
             <Button variant="outline" onClick={() => { setTemplateEditorOpen(false); setEditTemplate(null); }} className="w-full sm:w-auto">Annuler</Button>
             <Button
               onClick={updateTemplate}
-              disabled={isUpdatingTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()}
+              disabled={isUpdatingTemplate || !editTemplateTitle.trim() || isHtmlEmpty(editTemplateContent)}
               className="w-full sm:w-auto"
             >
               {isUpdatingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
