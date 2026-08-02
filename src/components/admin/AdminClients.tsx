@@ -71,6 +71,7 @@ export function AdminClients() {
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
   const [templatesManagerOpen, setTemplatesManagerOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<EmailTemplate | null>(null);
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
   const [editTemplateTitle, setEditTemplateTitle] = useState("");
   const [editTemplateContent, setEditTemplateContent] = useState("");
   const [editTemplateCategory, setEditTemplateCategory] = useState("Général");
