@@ -71,6 +71,7 @@ export function AdminClients() {
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
   const [templatesManagerOpen, setTemplatesManagerOpen] = useState(false);
   const [editTemplate, setEditTemplate] = useState<EmailTemplate | null>(null);
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
   const [editTemplateTitle, setEditTemplateTitle] = useState("");
   const [editTemplateContent, setEditTemplateContent] = useState("");
   const [editTemplateCategory, setEditTemplateCategory] = useState("Général");
@@ -150,35 +151,58 @@ export function AdminClients() {
 
   const openEditTemplate = (t: EmailTemplate) => {
     setEditTemplate(t);
+    setTemplateEditorOpen(true);
     setEditTemplateTitle(t.title);
     setEditTemplateContent(t.content);
     setEditTemplateCategory(t.category || "Général");
     setEditTemplateNewCategory("");
   };
 
+  const openCreateTemplate = () => {
+    setEditTemplate(null);
+    setTemplateEditorOpen(true);
+    setEditTemplateTitle("");
+    setEditTemplateContent("");
+    setEditTemplateCategory(templateCategoryFilter !== "all" ? templateCategoryFilter : "Général");
+    setEditTemplateNewCategory("");
+  };
+
   const updateTemplate = async () => {
-    if (!editTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()) return;
+    if (!editTemplateTitle.trim() || !editTemplateContent.trim()) return;
     const category = (editTemplateNewCategory.trim() || editTemplateCategory || "Général").trim();
     setIsUpdatingTemplate(true);
     try {
-      const { error } = await supabase
-        .from("email_templates")
-        .update({
+      if (editTemplate) {
+        const { error } = await supabase
+          .from("email_templates")
+          .update({
+            title: editTemplateTitle.trim(),
+            content: editTemplateContent.trim(),
+            category,
+          })
+          .eq("id", editTemplate.id);
+        if (error) throw error;
+        toast({ title: "Modèle mis à jour", description: `${editTemplateTitle.trim()} · ${category}` });
+      } else {
+        const { error } = await supabase.from("email_templates").insert({
           title: editTemplateTitle.trim(),
           content: editTemplateContent.trim(),
           category,
-        })
-        .eq("id", editTemplate.id);
-      if (error) throw error;
-      toast({ title: "Modèle mis à jour", description: `${editTemplateTitle.trim()} · ${category}` });
+          created_by: user?.id ?? null,
+        });
+        if (error) throw error;
+        toast({ title: "Modèle créé", description: `${editTemplateTitle.trim()} · ${category}` });
+      }
+      setTemplateEditorOpen(false);
       setEditTemplate(null);
       fetchEmailTemplates();
     } catch {
-      toast({ title: "Erreur", description: "Impossible de modifier le modèle.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Impossible d'enregistrer le modèle.", variant: "destructive" });
     } finally {
       setIsUpdatingTemplate(false);
     }
   };
+
 
 
 
@@ -1101,10 +1125,14 @@ export function AdminClients() {
           <DialogHeader className="text-left">
             <DialogTitle className="text-base sm:text-lg">Modèles de mails</DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
-              Recherchez, modifiez ou supprimez vos réponses types.
+              Créez, recherchez, modifiez ou supprimez vos réponses types.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
+            <Button size="sm" onClick={openCreateTemplate} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Nouveau modèle
+            </Button>
             <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1158,11 +1186,11 @@ export function AdminClients() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit template dialog */}
-      <Dialog open={!!editTemplate} onOpenChange={(o) => !o && setEditTemplate(null)}>
+      {/* Create / edit template dialog */}
+      <Dialog open={templateEditorOpen} onOpenChange={(o) => { setTemplateEditorOpen(o); if (!o) setEditTemplate(null); }}>
         <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-lg p-4 sm:p-6">
           <DialogHeader className="text-left">
-            <DialogTitle className="text-base sm:text-lg">Modifier le modèle</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">{editTemplate ? "Modifier le modèle" : "Nouveau modèle"}</DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
               Utilisez <code>{"{{prenom}}"}</code> pour insérer le prénom du contact.
             </DialogDescription>
@@ -1202,7 +1230,7 @@ export function AdminClients() {
             </div>
           </div>
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setEditTemplate(null)} className="w-full sm:w-auto">Annuler</Button>
+            <Button variant="outline" onClick={() => { setTemplateEditorOpen(false); setEditTemplate(null); }} className="w-full sm:w-auto">Annuler</Button>
             <Button
               onClick={updateTemplate}
               disabled={isUpdatingTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()}
