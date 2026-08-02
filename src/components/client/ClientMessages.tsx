@@ -140,7 +140,7 @@ export function ClientMessages() {
             for (const reply of replies) {
               emailMessages.push({
                 id: `reply-${reply.id}`,
-                content: reply.message,
+                content: htmlToText(reply.message),
                 created_at: reply.created_at,
                 isOwn: reply.sender === "prospect",
                 source: "email",
