@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { sendEmail } from "@/lib/emails";
+import { htmlToText } from "@/lib/htmlToText";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Message = Tables<"messages">;
@@ -114,7 +115,7 @@ export function AdminMessages() {
           const replies = (contactReplies || []).filter((r) => r.contact_request_id === cr.id);
           const lastReply = replies[0];
           const lastDate = lastReply ? lastReply.created_at : cr.created_at;
-          const lastContent = lastReply ? lastReply.message : (cr.message || "Demande de contact");
+          const lastContent = lastReply ? htmlToText(lastReply.message) : (cr.message || "Demande de contact");
           
           const existing = emailConvoMap.get(cr.email);
           if (!existing || new Date(lastDate) > new Date(existing.lastDate)) {
@@ -245,7 +246,7 @@ export function AdminMessages() {
             for (const reply of replies) {
               emailMessages.push({
                 id: `reply-${reply.id}`,
-                content: reply.message,
+                content: htmlToText(reply.message),
                 created_at: reply.created_at,
                 isOwn: reply.sender === "admin",
                 source: "email",

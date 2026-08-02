@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock, Reply, Send, MessageSquare } from "lucide-react";
+import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock, Reply, Send, MessageSquare, Save, BookmarkPlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportClientsToCSV, type ExportClient } from "@/lib/exportCsv";
+import { htmlToText } from "@/lib/htmlToText";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
@@ -57,6 +58,13 @@ export function AdminClients() {
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string; sender: string }[]>([]);
 
+  // Email templates
+  type EmailTemplate = { id: string; title: string; content: string };
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+  const [saveTemplateDialog, setSaveTemplateDialog] = useState(false);
+  const [templateTitle, setTemplateTitle] = useState("");
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+
   // Conversation history for client detail
   const [clientMessages, setClientMessages] = useState<Tables<"messages">[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -64,7 +72,50 @@ export function AdminClients() {
   useEffect(() => {
     fetchClients();
     fetchContactRequests();
+    fetchEmailTemplates();
   }, []);
+
+  const fetchEmailTemplates = async () => {
+    const { data } = await supabase
+      .from("email_templates")
+      .select("id, title, content")
+      .order("created_at", { ascending: false });
+    setEmailTemplates(data || []);
+  };
+
+  const applyTemplate = (id: string) => {
+    const tpl = emailTemplates.find((t) => t.id === id);
+    if (!tpl) return;
+    const name = replyDialog.contact?.name?.split(" ")[0] || "";
+    setReplyMessage(tpl.content.replace(/\{\{\s*prenom\s*\}\}|\{\{\s*nom\s*\}\}/gi, name));
+  };
+
+  const saveAsTemplate = async () => {
+    if (!templateTitle.trim() || !replyMessage.trim()) return;
+    setIsSavingTemplate(true);
+    try {
+      const { error } = await supabase.from("email_templates").insert({
+        title: templateTitle.trim(),
+        content: replyMessage.trim(),
+        created_by: user?.id ?? null,
+      });
+      if (error) throw error;
+      toast({ title: "Modèle enregistré", description: templateTitle.trim() });
+      setSaveTemplateDialog(false);
+      setTemplateTitle("");
+      fetchEmailTemplates();
+    } catch (e: any) {
+      toast({ title: "Erreur", description: "Impossible d'enregistrer le modèle.", variant: "destructive" });
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  const deleteTemplate = async (id: string) => {
+    await supabase.from("email_templates").delete().eq("id", id);
+    fetchEmailTemplates();
+  };
+
 
   const fetchContactRequests = async () => {
     try {
@@ -782,7 +833,7 @@ export function AdminClients() {
                           <p className="text-[10px] font-semibold mb-1 break-words">
                             {isProspect ? `📩 ${replyDialog.contact?.name}` : "📤 Anaïs (vous)"}
                           </p>
-                          <p className="text-foreground whitespace-pre-line break-words">{reply.message}</p>
+                          <p className="text-foreground whitespace-pre-line break-words">{htmlToText(reply.message)}</p>
                           <p className="text-[10px] text-muted-foreground mt-1 break-words">
                             {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                           </p>
@@ -793,15 +844,57 @@ export function AdminClients() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">Votre réponse</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <Label className="text-xs sm:text-sm flex-1">Votre réponse</Label>
+                  {emailTemplates.length > 0 && (
+                    <Select onValueChange={applyTemplate}>
+                      <SelectTrigger className="h-8 text-xs w-full sm:w-56">
+                        <SelectValue placeholder="Utiliser un modèle..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {emailTemplates.map((t) => (
+                          <SelectItem key={t.id} value={t.id} className="text-xs">
+                            {t.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
                 <Textarea
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Écrivez votre réponse..."
-                  rows={3}
+                  rows={4}
                   className="border-border focus:border-secondary text-sm w-full"
                 />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    disabled={!replyMessage.trim()}
+                    onClick={() => setSaveTemplateDialog(true)}
+                  >
+                    <BookmarkPlus className="h-3.5 w-3.5 mr-1.5" />
+                    Enregistrer comme modèle
+                  </Button>
+                </div>
+                {emailTemplates.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {emailTemplates.map((t) => (
+                      <Badge key={t.id} variant="secondary" className="text-[10px] gap-1 font-normal">
+                        <button type="button" onClick={() => applyTemplate(t.id)}>{t.title}</button>
+                        <button type="button" onClick={() => deleteTemplate(t.id)} aria-label={`Supprimer le modèle ${t.title}`}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
+
             </div>
           )}
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
@@ -819,6 +912,34 @@ export function AdminClients() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Save as template dialog */}
+      <Dialog open={saveTemplateDialog} onOpenChange={setSaveTemplateDialog}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg">Enregistrer comme modèle</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Donnez un nom à ce modèle pour le réutiliser. Utilisez <code>{"{{prenom}}"}</code> pour insérer le prénom du contact.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs sm:text-sm">Nom du modèle</Label>
+            <Input
+              value={templateTitle}
+              onChange={(e) => setTemplateTitle(e.target.value)}
+              placeholder="Ex : Tarifs et zones d'intervention"
+            />
+          </div>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setSaveTemplateDialog(false)} className="w-full sm:w-auto">Annuler</Button>
+            <Button onClick={saveAsTemplate} disabled={isSavingTemplate || !templateTitle.trim()} className="w-full sm:w-auto">
+              {isSavingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

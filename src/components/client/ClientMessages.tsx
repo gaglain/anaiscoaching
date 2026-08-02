@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { notifyAdmin } from "@/lib/emails";
+import { htmlToText } from "@/lib/htmlToText";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Message = Tables<"messages">;
@@ -139,7 +140,7 @@ export function ClientMessages() {
             for (const reply of replies) {
               emailMessages.push({
                 id: `reply-${reply.id}`,
-                content: reply.message,
+                content: htmlToText(reply.message),
                 created_at: reply.created_at,
                 isOwn: reply.sender === "prospect",
                 source: "email",
