@@ -69,7 +69,33 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Inbound email content not yet available");
     }
 
-    const textBody = emailData.text || emailData.html || "";
+    const htmlToText = (input: string): string => {
+      let text = input;
+      if (/<\/?[a-z][\s\S]*>/i.test(text)) {
+        text = text.replace(/<(script|style|head)[\s\S]*?<\/\1>/gi, "");
+        text = text.replace(/<blockquote[\s\S]*?<\/blockquote>/gi, "");
+        text = text.replace(/<br\s*\/?>/gi, "\n");
+        text = text.replace(/<\/(p|div|tr|li|h[1-6])>/gi, "\n");
+        text = text.replace(/<[^>]+>/g, "");
+      }
+      const entities: Record<string, string> = {
+        "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"',
+        "&#39;": "'", "&apos;": "'", "&rsquo;": "’", "&ldquo;": "“", "&rdquo;": "”",
+      };
+      text = text.replace(/&[a-zA-Z#0-9]+;/g, (m) => {
+        if (entities[m]) return entities[m];
+        const num = m.match(/^&#(\d+);$/);
+        if (num) return String.fromCharCode(Number(num[1]));
+        const hex = m.match(/^&#x([0-9a-fA-F]+);$/);
+        if (hex) return String.fromCharCode(parseInt(hex[1], 16));
+        return m;
+      });
+      return text.replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+    };
+
+    const textBody = (emailData.text && emailData.text.trim())
+      ? emailData.text
+      : htmlToText(emailData.html || "");
 
     if (!textBody.trim()) {
       console.log("Empty email body, skipping");
