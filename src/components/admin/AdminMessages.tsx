@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { sendEmail } from "@/lib/emails";
+import { htmlToText } from "@/lib/htmlToText";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Message = Tables<"messages">;
