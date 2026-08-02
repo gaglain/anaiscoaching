@@ -976,6 +976,14 @@ export function AdminClients() {
                             </button>
                             <button
                               type="button"
+                              onClick={() => openEditTemplate(t)}
+                              aria-label={`Modifier le modèle ${t.title}`}
+                              className="text-muted-foreground hover:text-secondary shrink-0"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => deleteTemplate(t.id)}
                               aria-label={`Supprimer le modèle ${t.title}`}
                               className="text-muted-foreground hover:text-destructive shrink-0"
