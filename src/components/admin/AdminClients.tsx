@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock, Reply, Send, MessageSquare } from "lucide-react";
+import { Users, Search, Loader2, Calendar, FileText, Download, Edit2, Phone, Target, TrendingUp, Tag, X, Plus, Trash2, Mail, CheckCircle, Clock, Reply, Send, MessageSquare, Save, BookmarkPlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { exportClientsToCSV, type ExportClient } from "@/lib/exportCsv";
+import { htmlToText } from "@/lib/htmlToText";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Profile = Tables<"profiles">;
