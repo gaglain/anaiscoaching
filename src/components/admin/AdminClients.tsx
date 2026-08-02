@@ -69,6 +69,13 @@ export function AdminClients() {
   const [templateSearch, setTemplateSearch] = useState("");
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState("all");
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
+  const [templatesManagerOpen, setTemplatesManagerOpen] = useState(false);
+  const [editTemplate, setEditTemplate] = useState<EmailTemplate | null>(null);
+  const [editTemplateTitle, setEditTemplateTitle] = useState("");
+  const [editTemplateContent, setEditTemplateContent] = useState("");
+  const [editTemplateCategory, setEditTemplateCategory] = useState("Général");
+  const [editTemplateNewCategory, setEditTemplateNewCategory] = useState("");
+  const [isUpdatingTemplate, setIsUpdatingTemplate] = useState(false);
 
   const DEFAULT_TEMPLATE_CATEGORIES = ["Général", "Tarifs", "Prise de contact", "Relance", "Organisation", "Refus"];
   const templateCategories = Array.from(
