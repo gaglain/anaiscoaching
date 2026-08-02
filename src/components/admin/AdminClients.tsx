@@ -59,11 +59,30 @@ export function AdminClients() {
   const [replyHistory, setReplyHistory] = useState<{ id: string; message: string; created_at: string; sender: string }[]>([]);
 
   // Email templates
-  type EmailTemplate = { id: string; title: string; content: string };
+  type EmailTemplate = { id: string; title: string; content: string; category: string };
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
   const [saveTemplateDialog, setSaveTemplateDialog] = useState(false);
   const [templateTitle, setTemplateTitle] = useState("");
+  const [templateCategory, setTemplateCategory] = useState("Général");
+  const [newTemplateCategory, setNewTemplateCategory] = useState("");
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState("all");
+  const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
+
+  const DEFAULT_TEMPLATE_CATEGORIES = ["Général", "Tarifs", "Prise de contact", "Relance", "Organisation", "Refus"];
+  const templateCategories = Array.from(
+    new Set([...DEFAULT_TEMPLATE_CATEGORIES, ...emailTemplates.map((t) => t.category || "Général")])
+  );
+  const normalize = (s: string) =>
+    s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const filteredTemplates = emailTemplates.filter((t) => {
+    const matchCat = templateCategoryFilter === "all" || (t.category || "Général") === templateCategoryFilter;
+    const q = normalize(templateSearch.trim());
+    const matchSearch =
+      !q || normalize(t.title).includes(q) || normalize(t.content).includes(q) || normalize(t.category || "").includes(q);
+    return matchCat && matchSearch;
+  });
 
   // Conversation history for client detail
   const [clientMessages, setClientMessages] = useState<Tables<"messages">[]>([]);
@@ -78,9 +97,10 @@ export function AdminClients() {
   const fetchEmailTemplates = async () => {
     const { data } = await supabase
       .from("email_templates")
-      .select("id, title, content")
+      .select("id, title, content, category")
+      .order("category", { ascending: true })
       .order("created_at", { ascending: false });
-    setEmailTemplates(data || []);
+    setEmailTemplates((data as EmailTemplate[]) || []);
   };
 
   const applyTemplate = (id: string) => {
@@ -88,21 +108,26 @@ export function AdminClients() {
     if (!tpl) return;
     const name = replyDialog.contact?.name?.split(" ")[0] || "";
     setReplyMessage(tpl.content.replace(/\{\{\s*prenom\s*\}\}|\{\{\s*nom\s*\}\}/gi, name));
+    setTemplatesPanelOpen(false);
   };
 
   const saveAsTemplate = async () => {
+    const category = (newTemplateCategory.trim() || templateCategory || "Général").trim();
     if (!templateTitle.trim() || !replyMessage.trim()) return;
     setIsSavingTemplate(true);
     try {
       const { error } = await supabase.from("email_templates").insert({
         title: templateTitle.trim(),
         content: replyMessage.trim(),
+        category,
         created_by: user?.id ?? null,
       });
       if (error) throw error;
-      toast({ title: "Modèle enregistré", description: templateTitle.trim() });
+      toast({ title: "Modèle enregistré", description: `${templateTitle.trim()} · ${category}` });
       setSaveTemplateDialog(false);
       setTemplateTitle("");
+      setNewTemplateCategory("");
+      setTemplateCategory("Général");
       fetchEmailTemplates();
     } catch (e: any) {
       toast({ title: "Erreur", description: "Impossible d'enregistrer le modèle.", variant: "destructive" });
@@ -115,6 +140,7 @@ export function AdminClients() {
     await supabase.from("email_templates").delete().eq("id", id);
     fetchEmailTemplates();
   };
+
 
 
   const fetchContactRequests = async () => {
@@ -847,20 +873,82 @@ export function AdminClients() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <Label className="text-xs sm:text-sm flex-1">Votre réponse</Label>
                   {emailTemplates.length > 0 && (
-                    <Select onValueChange={applyTemplate}>
-                      <SelectTrigger className="h-8 text-xs w-full sm:w-56">
-                        <SelectValue placeholder="Utiliser un modèle..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {emailTemplates.map((t) => (
-                          <SelectItem key={t.id} value={t.id} className="text-xs">
-                            {t.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs w-full sm:w-auto"
+                      onClick={() => setTemplatesPanelOpen((v) => !v)}
+                    >
+                      <FileText className="h-3.5 w-3.5 mr-1.5" />
+                      Modèles ({emailTemplates.length})
+                    </Button>
                   )}
                 </div>
+
+                {templatesPanelOpen && emailTemplates.length > 0 && (
+                  <div className="rounded-lg border border-border bg-muted/30 p-2 space-y-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          value={templateSearch}
+                          onChange={(e) => setTemplateSearch(e.target.value)}
+                          placeholder="Rechercher un modèle..."
+                          className="h-8 pl-7 text-xs"
+                        />
+                      </div>
+                      <Select value={templateCategoryFilter} onValueChange={setTemplateCategoryFilter}>
+                        <SelectTrigger className="h-8 text-xs w-full sm:w-44">
+                          <SelectValue placeholder="Catégorie" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="text-xs">Toutes les catégories</SelectItem>
+                          {templateCategories.map((c) => (
+                            <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                      {filteredTemplates.length === 0 ? (
+                        <p className="text-xs text-muted-foreground py-2 text-center">Aucun modèle trouvé.</p>
+                      ) : (
+                        filteredTemplates.map((t) => (
+                          <div
+                            key={t.id}
+                            className="flex items-start gap-2 rounded-md border border-border bg-background p-2"
+                          >
+                            <button
+                              type="button"
+                              className="flex-1 text-left overflow-hidden"
+                              onClick={() => applyTemplate(t.id)}
+                            >
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-medium break-words">{t.title}</span>
+                                <Badge variant="outline" className="text-[9px] font-normal">
+                                  {t.category || "Général"}
+                                </Badge>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground line-clamp-2 break-words mt-0.5">
+                                {t.content}
+                              </p>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteTemplate(t.id)}
+                              aria-label={`Supprimer le modèle ${t.title}`}
+                              className="text-muted-foreground hover:text-destructive shrink-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <Textarea
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
@@ -881,19 +969,8 @@ export function AdminClients() {
                     Enregistrer comme modèle
                   </Button>
                 </div>
-                {emailTemplates.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {emailTemplates.map((t) => (
-                      <Badge key={t.id} variant="secondary" className="text-[10px] gap-1 font-normal">
-                        <button type="button" onClick={() => applyTemplate(t.id)}>{t.title}</button>
-                        <button type="button" onClick={() => deleteTemplate(t.id)} aria-label={`Supprimer le modèle ${t.title}`}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
               </div>
+
 
             </div>
           )}
@@ -922,14 +999,36 @@ export function AdminClients() {
               Donnez un nom à ce modèle pour le réutiliser. Utilisez <code>{"{{prenom}}"}</code> pour insérer le prénom du contact.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label className="text-xs sm:text-sm">Nom du modèle</Label>
-            <Input
-              value={templateTitle}
-              onChange={(e) => setTemplateTitle(e.target.value)}
-              placeholder="Ex : Tarifs et zones d'intervention"
-            />
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Nom du modèle</Label>
+              <Input
+                value={templateTitle}
+                onChange={(e) => setTemplateTitle(e.target.value)}
+                placeholder="Ex : Tarifs et zones d'intervention"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Catégorie</Label>
+              <Select value={templateCategory} onValueChange={setTemplateCategory}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Choisir une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templateCategories.map((c) => (
+                    <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                value={newTemplateCategory}
+                onChange={(e) => setNewTemplateCategory(e.target.value)}
+                placeholder="Ou créer une nouvelle catégorie..."
+                className="text-sm"
+              />
+            </div>
           </div>
+
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setSaveTemplateDialog(false)} className="w-full sm:w-auto">Annuler</Button>
             <Button onClick={saveAsTemplate} disabled={isSavingTemplate || !templateTitle.trim()} className="w-full sm:w-auto">
