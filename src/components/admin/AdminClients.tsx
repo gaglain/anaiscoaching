@@ -141,6 +141,39 @@ export function AdminClients() {
     fetchEmailTemplates();
   };
 
+  const openEditTemplate = (t: EmailTemplate) => {
+    setEditTemplate(t);
+    setEditTemplateTitle(t.title);
+    setEditTemplateContent(t.content);
+    setEditTemplateCategory(t.category || "Général");
+    setEditTemplateNewCategory("");
+  };
+
+  const updateTemplate = async () => {
+    if (!editTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()) return;
+    const category = (editTemplateNewCategory.trim() || editTemplateCategory || "Général").trim();
+    setIsUpdatingTemplate(true);
+    try {
+      const { error } = await supabase
+        .from("email_templates")
+        .update({
+          title: editTemplateTitle.trim(),
+          content: editTemplateContent.trim(),
+          category,
+        })
+        .eq("id", editTemplate.id);
+      if (error) throw error;
+      toast({ title: "Modèle mis à jour", description: `${editTemplateTitle.trim()} · ${category}` });
+      setEditTemplate(null);
+      fetchEmailTemplates();
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de modifier le modèle.", variant: "destructive" });
+    } finally {
+      setIsUpdatingTemplate(false);
+    }
+  };
+
+
 
 
   const fetchContactRequests = async () => {
