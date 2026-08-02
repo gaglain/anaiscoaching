@@ -150,35 +150,58 @@ export function AdminClients() {
 
   const openEditTemplate = (t: EmailTemplate) => {
     setEditTemplate(t);
+    setTemplateEditorOpen(true);
     setEditTemplateTitle(t.title);
     setEditTemplateContent(t.content);
     setEditTemplateCategory(t.category || "Général");
     setEditTemplateNewCategory("");
   };
 
+  const openCreateTemplate = () => {
+    setEditTemplate(null);
+    setTemplateEditorOpen(true);
+    setEditTemplateTitle("");
+    setEditTemplateContent("");
+    setEditTemplateCategory(templateCategoryFilter !== "all" ? templateCategoryFilter : "Général");
+    setEditTemplateNewCategory("");
+  };
+
   const updateTemplate = async () => {
-    if (!editTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()) return;
+    if (!editTemplateTitle.trim() || !editTemplateContent.trim()) return;
     const category = (editTemplateNewCategory.trim() || editTemplateCategory || "Général").trim();
     setIsUpdatingTemplate(true);
     try {
-      const { error } = await supabase
-        .from("email_templates")
-        .update({
+      if (editTemplate) {
+        const { error } = await supabase
+          .from("email_templates")
+          .update({
+            title: editTemplateTitle.trim(),
+            content: editTemplateContent.trim(),
+            category,
+          })
+          .eq("id", editTemplate.id);
+        if (error) throw error;
+        toast({ title: "Modèle mis à jour", description: `${editTemplateTitle.trim()} · ${category}` });
+      } else {
+        const { error } = await supabase.from("email_templates").insert({
           title: editTemplateTitle.trim(),
           content: editTemplateContent.trim(),
           category,
-        })
-        .eq("id", editTemplate.id);
-      if (error) throw error;
-      toast({ title: "Modèle mis à jour", description: `${editTemplateTitle.trim()} · ${category}` });
+          created_by: user?.id ?? null,
+        });
+        if (error) throw error;
+        toast({ title: "Modèle créé", description: `${editTemplateTitle.trim()} · ${category}` });
+      }
+      setTemplateEditorOpen(false);
       setEditTemplate(null);
       fetchEmailTemplates();
     } catch {
-      toast({ title: "Erreur", description: "Impossible de modifier le modèle.", variant: "destructive" });
+      toast({ title: "Erreur", description: "Impossible d'enregistrer le modèle.", variant: "destructive" });
     } finally {
       setIsUpdatingTemplate(false);
     }
   };
+
 
 
 
