@@ -90,7 +90,7 @@ export function AdminClients() {
     const matchCat = templateCategoryFilter === "all" || (t.category || "Général") === templateCategoryFilter;
     const q = normalize(templateSearch.trim());
     const matchSearch =
-      !q || normalize(t.title).includes(q) || normalize(t.content).includes(q) || normalize(t.category || "").includes(q);
+      !q || normalize(t.title).includes(q) || normalize(htmlToText(t.content)).includes(q) || normalize(t.category || "").includes(q);
     return matchCat && matchSearch;
   });
 

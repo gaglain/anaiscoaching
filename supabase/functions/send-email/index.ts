@@ -250,7 +250,7 @@ const getEmailContent = (type: EmailRequest["type"], data: EmailRequest["data"])
             <h1 style="color: #f05a28;">Bonjour ${data.clientName} !</h1>
             <p>Anaïs Dubois vous a répondu suite à votre demande de contact :</p>
             <div style="background: #f8f8f8; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #f05a28;">
-              <p style="white-space: pre-line;">${data.replyMessage}</p>
+              <div style="white-space: pre-line; line-height: 1.6;">${data.replyMessage}</div>
             </div>
             <p style="margin-top: 24px;">
               <a href="https://coachsportif-rennes.fr" style="${buttonStyle}">
