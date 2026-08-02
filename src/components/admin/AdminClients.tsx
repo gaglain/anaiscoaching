@@ -833,7 +833,7 @@ export function AdminClients() {
                           <p className="text-[10px] font-semibold mb-1 break-words">
                             {isProspect ? `📩 ${replyDialog.contact?.name}` : "📤 Anaïs (vous)"}
                           </p>
-                          <p className="text-foreground whitespace-pre-line break-words">{reply.message}</p>
+                          <p className="text-foreground whitespace-pre-line break-words">{htmlToText(reply.message)}</p>
                           <p className="text-[10px] text-muted-foreground mt-1 break-words">
                             {format(new Date(reply.created_at), "d MMM yyyy à HH:mm", { locale: fr })}
                           </p>
@@ -844,15 +844,57 @@ export function AdminClients() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label className="text-xs sm:text-sm">Votre réponse</Label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <Label className="text-xs sm:text-sm flex-1">Votre réponse</Label>
+                  {emailTemplates.length > 0 && (
+                    <Select onValueChange={applyTemplate}>
+                      <SelectTrigger className="h-8 text-xs w-full sm:w-56">
+                        <SelectValue placeholder="Utiliser un modèle..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {emailTemplates.map((t) => (
+                          <SelectItem key={t.id} value={t.id} className="text-xs">
+                            {t.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
                 <Textarea
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Écrivez votre réponse..."
-                  rows={3}
+                  rows={4}
                   className="border-border focus:border-secondary text-sm w-full"
                 />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    disabled={!replyMessage.trim()}
+                    onClick={() => setSaveTemplateDialog(true)}
+                  >
+                    <BookmarkPlus className="h-3.5 w-3.5 mr-1.5" />
+                    Enregistrer comme modèle
+                  </Button>
+                </div>
+                {emailTemplates.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {emailTemplates.map((t) => (
+                      <Badge key={t.id} variant="secondary" className="text-[10px] gap-1 font-normal">
+                        <button type="button" onClick={() => applyTemplate(t.id)}>{t.title}</button>
+                        <button type="button" onClick={() => deleteTemplate(t.id)} aria-label={`Supprimer le modèle ${t.title}`}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
+
             </div>
           )}
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
