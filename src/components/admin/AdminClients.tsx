@@ -999,14 +999,36 @@ export function AdminClients() {
               Donnez un nom à ce modèle pour le réutiliser. Utilisez <code>{"{{prenom}}"}</code> pour insérer le prénom du contact.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label className="text-xs sm:text-sm">Nom du modèle</Label>
-            <Input
-              value={templateTitle}
-              onChange={(e) => setTemplateTitle(e.target.value)}
-              placeholder="Ex : Tarifs et zones d'intervention"
-            />
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Nom du modèle</Label>
+              <Input
+                value={templateTitle}
+                onChange={(e) => setTemplateTitle(e.target.value)}
+                placeholder="Ex : Tarifs et zones d'intervention"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Catégorie</Label>
+              <Select value={templateCategory} onValueChange={setTemplateCategory}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Choisir une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templateCategories.map((c) => (
+                    <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                value={newTemplateCategory}
+                onChange={(e) => setNewTemplateCategory(e.target.value)}
+                placeholder="Ou créer une nouvelle catégorie..."
+                className="text-sm"
+              />
+            </div>
           </div>
+
           <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setSaveTemplateDialog(false)} className="w-full sm:w-auto">Annuler</Button>
             <Button onClick={saveAsTemplate} disabled={isSavingTemplate || !templateTitle.trim()} className="w-full sm:w-auto">
