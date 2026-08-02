@@ -1221,11 +1221,11 @@ export function AdminClients() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs sm:text-sm">Contenu</Label>
-              <Textarea
+              <RichTextEditor
                 value={editTemplateContent}
-                onChange={(e) => setEditTemplateContent(e.target.value)}
-                rows={8}
-                className="text-sm"
+                onChange={setEditTemplateContent}
+                placeholder="Contenu du modèle..."
+                minHeight={160}
               />
             </div>
           </div>
