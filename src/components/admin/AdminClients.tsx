@@ -912,6 +912,34 @@ export function AdminClients() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Save as template dialog */}
+      <Dialog open={saveTemplateDialog} onOpenChange={setSaveTemplateDialog}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg">Enregistrer comme modèle</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Donnez un nom à ce modèle pour le réutiliser. Utilisez <code>{"{{prenom}}"}</code> pour insérer le prénom du contact.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-xs sm:text-sm">Nom du modèle</Label>
+            <Input
+              value={templateTitle}
+              onChange={(e) => setTemplateTitle(e.target.value)}
+              placeholder="Ex : Tarifs et zones d'intervention"
+            />
+          </div>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setSaveTemplateDialog(false)} className="w-full sm:w-auto">Annuler</Button>
+            <Button onClick={saveAsTemplate} disabled={isSavingTemplate || !templateTitle.trim()} className="w-full sm:w-auto">
+              {isSavingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
