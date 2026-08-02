@@ -873,20 +873,82 @@ export function AdminClients() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <Label className="text-xs sm:text-sm flex-1">Votre réponse</Label>
                   {emailTemplates.length > 0 && (
-                    <Select onValueChange={applyTemplate}>
-                      <SelectTrigger className="h-8 text-xs w-full sm:w-56">
-                        <SelectValue placeholder="Utiliser un modèle..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {emailTemplates.map((t) => (
-                          <SelectItem key={t.id} value={t.id} className="text-xs">
-                            {t.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs w-full sm:w-auto"
+                      onClick={() => setTemplatesPanelOpen((v) => !v)}
+                    >
+                      <FileText className="h-3.5 w-3.5 mr-1.5" />
+                      Modèles ({emailTemplates.length})
+                    </Button>
                   )}
                 </div>
+
+                {templatesPanelOpen && emailTemplates.length > 0 && (
+                  <div className="rounded-lg border border-border bg-muted/30 p-2 space-y-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          value={templateSearch}
+                          onChange={(e) => setTemplateSearch(e.target.value)}
+                          placeholder="Rechercher un modèle..."
+                          className="h-8 pl-7 text-xs"
+                        />
+                      </div>
+                      <Select value={templateCategoryFilter} onValueChange={setTemplateCategoryFilter}>
+                        <SelectTrigger className="h-8 text-xs w-full sm:w-44">
+                          <SelectValue placeholder="Catégorie" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="text-xs">Toutes les catégories</SelectItem>
+                          {templateCategories.map((c) => (
+                            <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                      {filteredTemplates.length === 0 ? (
+                        <p className="text-xs text-muted-foreground py-2 text-center">Aucun modèle trouvé.</p>
+                      ) : (
+                        filteredTemplates.map((t) => (
+                          <div
+                            key={t.id}
+                            className="flex items-start gap-2 rounded-md border border-border bg-background p-2"
+                          >
+                            <button
+                              type="button"
+                              className="flex-1 text-left overflow-hidden"
+                              onClick={() => applyTemplate(t.id)}
+                            >
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-medium break-words">{t.title}</span>
+                                <Badge variant="outline" className="text-[9px] font-normal">
+                                  {t.category || "Général"}
+                                </Badge>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground line-clamp-2 break-words mt-0.5">
+                                {t.content}
+                              </p>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteTemplate(t.id)}
+                              aria-label={`Supprimer le modèle ${t.title}`}
+                              className="text-muted-foreground hover:text-destructive shrink-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <Textarea
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
@@ -907,19 +969,8 @@ export function AdminClients() {
                     Enregistrer comme modèle
                   </Button>
                 </div>
-                {emailTemplates.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {emailTemplates.map((t) => (
-                      <Badge key={t.id} variant="secondary" className="text-[10px] gap-1 font-normal">
-                        <button type="button" onClick={() => applyTemplate(t.id)}>{t.title}</button>
-                        <button type="button" onClick={() => deleteTemplate(t.id)} aria-label={`Supprimer le modèle ${t.title}`}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
               </div>
+
 
             </div>
           )}
