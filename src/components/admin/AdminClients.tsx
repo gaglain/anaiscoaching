@@ -482,6 +482,14 @@ export function AdminClients() {
             <Download className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Exporter CSV</span>
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setTemplatesManagerOpen(true)}
+            className="border-secondary/30 hover:bg-secondary/5 shrink-0"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Modèles de mails</span>
+          </Button>
         </div>
       </div>
 
