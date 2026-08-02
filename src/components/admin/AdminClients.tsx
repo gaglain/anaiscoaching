@@ -69,6 +69,13 @@ export function AdminClients() {
   const [templateSearch, setTemplateSearch] = useState("");
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState("all");
   const [templatesPanelOpen, setTemplatesPanelOpen] = useState(false);
+  const [templatesManagerOpen, setTemplatesManagerOpen] = useState(false);
+  const [editTemplate, setEditTemplate] = useState<EmailTemplate | null>(null);
+  const [editTemplateTitle, setEditTemplateTitle] = useState("");
+  const [editTemplateContent, setEditTemplateContent] = useState("");
+  const [editTemplateCategory, setEditTemplateCategory] = useState("Général");
+  const [editTemplateNewCategory, setEditTemplateNewCategory] = useState("");
+  const [isUpdatingTemplate, setIsUpdatingTemplate] = useState(false);
 
   const DEFAULT_TEMPLATE_CATEGORIES = ["Général", "Tarifs", "Prise de contact", "Relance", "Organisation", "Refus"];
   const templateCategories = Array.from(
@@ -140,6 +147,39 @@ export function AdminClients() {
     await supabase.from("email_templates").delete().eq("id", id);
     fetchEmailTemplates();
   };
+
+  const openEditTemplate = (t: EmailTemplate) => {
+    setEditTemplate(t);
+    setEditTemplateTitle(t.title);
+    setEditTemplateContent(t.content);
+    setEditTemplateCategory(t.category || "Général");
+    setEditTemplateNewCategory("");
+  };
+
+  const updateTemplate = async () => {
+    if (!editTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()) return;
+    const category = (editTemplateNewCategory.trim() || editTemplateCategory || "Général").trim();
+    setIsUpdatingTemplate(true);
+    try {
+      const { error } = await supabase
+        .from("email_templates")
+        .update({
+          title: editTemplateTitle.trim(),
+          content: editTemplateContent.trim(),
+          category,
+        })
+        .eq("id", editTemplate.id);
+      if (error) throw error;
+      toast({ title: "Modèle mis à jour", description: `${editTemplateTitle.trim()} · ${category}` });
+      setEditTemplate(null);
+      fetchEmailTemplates();
+    } catch {
+      toast({ title: "Erreur", description: "Impossible de modifier le modèle.", variant: "destructive" });
+    } finally {
+      setIsUpdatingTemplate(false);
+    }
+  };
+
 
 
 
@@ -441,6 +481,14 @@ export function AdminClients() {
           >
             <Download className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Exporter CSV</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setTemplatesManagerOpen(true)}
+            className="border-secondary/30 hover:bg-secondary/5 shrink-0"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Modèles de mails</span>
           </Button>
         </div>
       </div>
@@ -936,6 +984,14 @@ export function AdminClients() {
                             </button>
                             <button
                               type="button"
+                              onClick={() => openEditTemplate(t)}
+                              aria-label={`Modifier le modèle ${t.title}`}
+                              className="text-muted-foreground hover:text-secondary shrink-0"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => deleteTemplate(t.id)}
                               aria-label={`Supprimer le modèle ${t.title}`}
                               className="text-muted-foreground hover:text-destructive shrink-0"
@@ -1033,6 +1089,126 @@ export function AdminClients() {
             <Button variant="outline" onClick={() => setSaveTemplateDialog(false)} className="w-full sm:w-auto">Annuler</Button>
             <Button onClick={saveAsTemplate} disabled={isSavingTemplate || !templateTitle.trim()} className="w-full sm:w-auto">
               {isSavingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Templates manager */}
+      <Dialog open={templatesManagerOpen} onOpenChange={setTemplatesManagerOpen}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg">Modèles de mails</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Recherchez, modifiez ou supprimez vos réponses types.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={templateSearch}
+                  onChange={(e) => setTemplateSearch(e.target.value)}
+                  placeholder="Rechercher un modèle..."
+                  className="pl-8 text-sm"
+                />
+              </div>
+              <Select value={templateCategoryFilter} onValueChange={setTemplateCategoryFilter}>
+                <SelectTrigger className="text-sm w-full sm:w-52">
+                  <SelectValue placeholder="Catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-sm">Toutes les catégories</SelectItem>
+                  {templateCategories.map((c) => (
+                    <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="max-h-[55vh] overflow-y-auto space-y-2 pr-1">
+              {filteredTemplates.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">Aucun modèle trouvé.</p>
+              ) : (
+                filteredTemplates.map((t) => (
+                  <div key={t.id} className="flex items-start gap-2 rounded-md border border-border bg-card p-3">
+                    <div className="flex-1 overflow-hidden">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium break-words">{t.title}</span>
+                        <Badge variant="outline" className="text-[10px] font-normal">{t.category || "Général"}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground whitespace-pre-wrap line-clamp-3 break-words mt-1">
+                        {t.content}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditTemplate(t)} aria-label={`Modifier ${t.title}`}>
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteTemplate(t.id)} aria-label={`Supprimer ${t.title}`}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit template dialog */}
+      <Dialog open={!!editTemplate} onOpenChange={(o) => !o && setEditTemplate(null)}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-lg p-4 sm:p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-base sm:text-lg">Modifier le modèle</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Utilisez <code>{"{{prenom}}"}</code> pour insérer le prénom du contact.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Nom du modèle</Label>
+              <Input value={editTemplateTitle} onChange={(e) => setEditTemplateTitle(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Catégorie</Label>
+              <Select value={editTemplateCategory} onValueChange={setEditTemplateCategory}>
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Choisir une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templateCategories.map((c) => (
+                    <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                value={editTemplateNewCategory}
+                onChange={(e) => setEditTemplateNewCategory(e.target.value)}
+                placeholder="Ou créer une nouvelle catégorie..."
+                className="text-sm"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Contenu</Label>
+              <Textarea
+                value={editTemplateContent}
+                onChange={(e) => setEditTemplateContent(e.target.value)}
+                rows={8}
+                className="text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setEditTemplate(null)} className="w-full sm:w-auto">Annuler</Button>
+            <Button
+              onClick={updateTemplate}
+              disabled={isUpdatingTemplate || !editTemplateTitle.trim() || !editTemplateContent.trim()}
+              className="w-full sm:w-auto"
+            >
+              {isUpdatingTemplate ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Enregistrer
             </Button>
           </DialogFooter>
