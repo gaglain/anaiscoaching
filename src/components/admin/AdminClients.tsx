@@ -1186,11 +1186,11 @@ export function AdminClients() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit template dialog */}
-      <Dialog open={!!editTemplate} onOpenChange={(o) => !o && setEditTemplate(null)}>
+      {/* Create / edit template dialog */}
+      <Dialog open={templateEditorOpen} onOpenChange={(o) => { setTemplateEditorOpen(o); if (!o) setEditTemplate(null); }}>
         <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-lg p-4 sm:p-6">
           <DialogHeader className="text-left">
-            <DialogTitle className="text-base sm:text-lg">Modifier le modèle</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">{editTemplate ? "Modifier le modèle" : "Nouveau modèle"}</DialogTitle>
             <DialogDescription className="text-xs sm:text-sm">
               Utilisez <code>{"{{prenom}}"}</code> pour insérer le prénom du contact.
             </DialogDescription>
