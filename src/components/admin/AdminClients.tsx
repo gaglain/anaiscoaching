@@ -1029,12 +1029,12 @@ export function AdminClients() {
                   </div>
                 )}
 
-                <Textarea
+                <RichTextEditor
                   value={replyMessage}
-                  onChange={(e) => setReplyMessage(e.target.value)}
+                  onChange={setReplyMessage}
                   placeholder="Écrivez votre réponse..."
-                  rows={4}
-                  className="border-border focus:border-secondary text-sm w-full"
+                  minHeight={120}
+                  className="focus-within:border-secondary"
                 />
                 <div className="flex flex-wrap gap-2">
                   <Button
